@@ -77,4 +77,5 @@ def render_video(data,url):
     for remove_num in range(all_frame):
         os.remove(f"./temp/{identify_code}_{str(remove_num).zfill(sequence_num_width)}.png")
 
+# 临时用作测试用。
 render_video(data={'score': 3.531, 'aid': '273559420', 'bvid': 'BV1UF411Q7WN', 'title': '道化師協奏会 ～Concert of McDonald～', 'uploader': 'yumeki335', 'copyright': '1', 'play': '3883', 'like': '738', 'coin': '370', 'star': '573', 'pubtime': '2023-07-19 23:30:00', 'adjust_scale': '1', 'part': '1', 'duration': 20, 'start_time': 387.0333125, 'full_time': 20, 'web_prefix': 'http://localhost:7213/', 'video_src': './video/273559420.mp4', 'avatar_src': './avatar/273559420.png', 'cover_src': './cover/273559420.png', 'theme_color': '(239, 73, 47)', 'theme_brightness': 'dark', 'ranking': 8 ,'output_src': 'MainRank_3.mp4'},url="http://127.0.0.1:5173/main")
