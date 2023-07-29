@@ -14,18 +14,18 @@ def get_img(aid):
     face = video_data["data"]["owner"]["face"]
     cover = video_data["data"]["pic"]
     # 头像
-    if not os.path.exists(f"avatar/{aid}.png"):
+    if not os.path.exists(f"./avatar/{aid}.png"):
         img_content = requests.get(url=face).content
         img = Image.open(BytesIO(img_content))
-        img.save(f"avatar/{aid}.png")
+        img.save(f"./avatar/{aid}.png")
     # 封面
     if not os.path.exists(f"cover/{aid}.png"):
         img_content = requests.get(url=cover).content
         img = Image.open(BytesIO(img_content))
-        img.save(f"cover/{aid}.png")
+        img.save(f"./cover/{aid}.png")
     callback = {
-        "avatar": os.path.abspath(f"avatar/{aid}.png"),
-        "cover": os.path.abspath(f"cover/{aid}.png")
+        "avatar": f"./avatar/{aid}.png",
+        "cover": f"./cover/{aid}.png"
         }
     return callback
 
@@ -54,12 +54,12 @@ def get_video(aid,part = 1):
         command.append("./cookies/cookie.txt")
     if os.path.exists(f"./video/{aid}.mp4"):
         logging.info(f"av{aid} 视频已经存在")
-        return os.path.abspath(f"./video/{aid}.mp4")
+        return f"./video/{aid}.mp4"
     while(not os.path.exists(f"./video/{aid}.mp4")):
         logging.info(f"下载 av{aid} 视频...")
         subprocess.Popen(command + ["-o","./video","-O",aid,f"av{aid}{p_src}"]).wait()
     logging.info(f"av{aid} 视频下载完成")
-    return os.path.abspath(f"./video/{aid}.mp4")
+    return f"./video/{aid}.mp4"
 
 # CSV 表格转换
 def convert_csv(file):
@@ -85,3 +85,31 @@ def extract_single_column(post_list,target,end_num):
 def average_image_color(file):
     dominant = Haishoku.getDominant(file)
     return dominant
+
+def brightness_judge(rgb):
+    gray = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
+    if gray >= 128:
+        return 'light'
+    else:
+        return 'dark'
+
+def check_dir():
+    dirpaths = ["avatar","cover","data",
+            "fast_view","log","option",
+            "output","output/clip","output/final",
+            "video","cookies","temp"]
+    for dirpath in dirpaths:
+        if not os.path.exists(dirpath):
+            os.mkdir(dirpath)
+    if not os.path.exists("./option/blacklist.csv"):
+        # 预先黑名单
+        with open("option/blacklist.csv","w",encoding="utf-8-sig",newline='') as blackfile:
+            header = ["aid","title"]
+            blackInfo = csv.DictWriter(blackfile,header)
+            blackInfo.writeheader()
+    if not os.path.exists("./option/adjust.csv"):
+        # 预先内容系数调整
+        with open("option/adjust.csv","w",encoding="utf-8-sig",newline='') as adjustfile:
+            header = ["name","uid","adjust_scale"]
+            adjustInfo = csv.DictWriter(adjustfile,header)
+            adjustInfo.writeheader()

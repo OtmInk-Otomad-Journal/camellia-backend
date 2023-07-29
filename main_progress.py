@@ -1,9 +1,8 @@
 import logging
 import os
-import threading
 
 from danmuku_time import danmuku_time
-from program_function import exactVideoLength , getVideo , convert_csv , extract_single_column , inner_web
+from program_function import exactVideoLength , getVideo , convert_csv , extract_single_column
 from render_video import render_video
 # 声明变量
 from config import *
@@ -16,9 +15,6 @@ console_handler.setFormatter(formatter)
 console_handler.setLevel('DEBUG')
 logger = logging.getLogger()
 logger.addHandler(console_handler)
-
-# 启动端口
-inner_web(port)
 
 # 获取数据
 ranked_list = convert_csv("data/data.csv")
@@ -39,7 +35,6 @@ for viding in ranked_list:
         break
     if os.path.exists(f"./output/clip/MainRank_{render_times}.mp4"):
         continue
-    video_src = getVideo(viding["aid"],int(viding["part"])) # 绝对路径以使用 HTML 模板
     full_time = exactVideoLength(viding["aid"])
 
     if render_times == 1:
@@ -48,48 +43,31 @@ for viding in ranked_list:
             pass
         ## 当存在 ED 时，就用指定 ED
         elif os.path.exists("./option/ed.mp4"):
-            url = "file://" + os.path.abspath("./template/SideRank.html")
+            url = f"{render_prefix}/ed"
             work_info = {
                 "start_time": 0,
-                "sep_time": exactVideoLength("./option/ed.mp4"),
-                "video_src": os.path.abspath("./option/ed.mp4"),
+                "full_time": exactVideoLength("./option/ed.mp4"),
+                "web_prefix": web_prefix,
+                "video_src": "./option/ed.mp4",
                 "output_src": f"./output/clip/SideRank.mp4",
                 "more_data": ranked_list[main_end:side_end]
             }
             render_video(work_info,url)
         ## 否则主榜连着副榜一起放
         else:
-            url = "file://" + os.path.abspath("./template/MainToSideVideo.html")
-            work_info = viding + {
-                "sep_time": full_time,
+            url = f"{render_prefix}/side"
+            viding.update({
+                "full_time": full_time,
                 "start_time" : 0,
-                "video_src": video_src,
-                "cover_src": f"http://{host}:{port}/cover/{viding['aid']}.png",
-                "output_src": f"./output/clip/MainRank_{render_times}.mp4",
+                "output_src": f"./output/clip/MainRank_1.mp4",
                 "more_data": ranked_list[main_end:side_end]
-            }
-            render_video(work_info,url)
+            })
+            render_video(viding,url)
             continue
-
-    if viding["start_time"] == "":
-        start_time,end_time = danmuku_time(viding["aid"],full_time,sep_time)
-    else:
-        start_time,end_time = int(viding["start_time"]),sep_time
-
-    work_info = viding + {
-        "full_time" : full_time,
-        "sep_time": end_time - start_time,
-        "start_time" : start_time,
-        "end_time" : end_time,
-        "video_src": video_src,
-        "web_video_src": f"http://{host}:{port}{video_src}",
-        "cover_src": f"http://{host}:{port}/cover/{viding['aid']}.png",
-        "output_src": f"./output/clip/MainRank_{render_times}.mp4",
-        "avatar_src": f"http://{host}:{port}/avatar/{viding['aid']}.png",
-    }
-
-    url = "file://" + os.path.abspath("./template/MainRank.html")
-    render_video(work_info,url)
+    # 否则正常渲染。
+    url = f"{render_prefix}/main"
+    viding.update({ "output_src": f"./output/clip/MainRank_{render_times}.mp4" })
+    render_video(viding,url)
 
 
 # PICK UP 合成
@@ -101,17 +79,10 @@ for picking in picked_list:
     video_src = os.path.abspath(getVideo(picking["aid"],picking["part"]))
     full_time = exactVideoLength(picking["aid"])
     start_time,end_time = danmuku_time(picking["aid"],full_time,sep_time)
-    work_info = picking + {
-        "full_time" : full_time,
-        "start_time" : start_time,
-        "sep_time": sep_time,
-        "end_time" : end_time,
-        "video_src": video_src,
-        "output_src": f"./output/clip/PickRank_{picks}.mp4"
-    }
+    picking.update({ "output_src": f"./output/clip/PickRank_{picks}.mp4" })
 
-    url = "file://" + os.path.abspath("./template/PickRank.html")
-    render_video(work_info,url)
+    url = f"{render_prefix}/pick"
+    render_video(picking,url)
 
 # 开头合成
 if os.path.exists("./output/clip/Opening.mp4"):

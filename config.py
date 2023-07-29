@@ -2,18 +2,18 @@ import time
 import os
 import threading
 
-# if os.path.exists("./custom/time.txt"):
-#     usedTime = str(open("./custom/time.txt","r").read())
-# else:
-#     usedTime = time.strftime("%Y%m%d", time.localtime())
-#     with open("./custom/time.txt","w") as f:
-#         f.write(usedTime)
+if os.path.exists("./time.txt"):
+    usedTime = str(open("./time.txt","r").read())
+else:
+    usedTime = time.strftime("%Y%m%d", time.localtime())
+    with open("./time.txt","w") as f:
+        f.write(usedTime)
 
 ### 拉取数据相关 ###
 sleep_inteval = 1             # 各处重复调用 api 的间隔秒数
 
 base_path = "./AutoData/"       # 数据存储路径
-delta_days = 12                 # 以今天往前的第 delta_days 日开始统计
+delta_days = 14                 # 以今天往前的第 delta_days 日开始统计
 range_days = 7                  # 统计 range_days 天的数据
 
 # 音 MAD: 26; 人力: 126; 鬼调: 22；不要用大分区，如 "119" (鬼畜)
@@ -73,5 +73,5 @@ muitl_limit = threading.Semaphore(3)
 
 sequence_num_width = 6 # 序列渲染编号最大位数
 
-host = "localhost"
-port = 7213
+web_prefix = "http://localhost:7213/" # 用于网页渲染的本地文件获取地址
+render_prefix = "http://127.0.0.1:5173" # 用于网页渲染的在线模板端

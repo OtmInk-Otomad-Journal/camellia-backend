@@ -1,12 +1,13 @@
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service as EdgeService
-from webdriver_manager.chrome import EdgeDriverManager
+from selenium.webdriver.chrome.service import Service as ChromeService
+from webdriver_manager.chrome import ChromeDriverManager
 import random
 import logging
 import threading
 import os
 import time
 import ffmpeg
+import json
 from tqdm import tqdm
 from config import *
 
@@ -19,11 +20,13 @@ def render_video(data,url):
 
     logging.info(f"启动进程 {identify_code}")
 
-    max_threading_count = 100
+    max_threading_count = 1
 
     all_frame = full_duration * fps
 
     render_quene = []
+
+    json_info = json.dumps(data)
     with tqdm(total=all_frame) as render_progress:
         def split_list_n_list(origin_list, n):
             if len(origin_list) % n == 0:
@@ -34,21 +37,23 @@ def render_video(data,url):
                 yield origin_list[i*cnt:(i+1)*cnt]
 
         def render_frame(frames):
-            global complete_frame
-            opt = webdriver.EdgeOptions()
+            opt = webdriver.ChromeOptions()
             opt.add_argument("--headless")
             opt.add_argument("--enable-webgl")
             opt.add_argument("--allow-file-access-from-files")
             # ChromeDriverManager().install()
-            driver = webdriver.Edge(service=EdgeService(),options=opt)
+            driver = webdriver.Edge(service=ChromeService(),options=opt)
             driver.get(url)
             driver.set_window_size(screen_size[0],screen_size[1])
-            time.sleep(1)
+            time.sleep(2)
+            driver.execute_script(f"inject({json_info})")
+            driver.execute_script(f"seek_frame({frames[0]},{fps},{start_time})")
+            time.sleep(7.5)
             for s_frame in frames:
                 driver.execute_script(f"seek_frame({s_frame},{fps},{start_time})")
+                # time.sleep(0.1)
                 # driver.execute_script(f"myVideo.currentTime = {frame / fps}")
                 driver.get_screenshot_as_file(f"./temp/{identify_code}_{str(s_frame).zfill(sequence_num_width)}.png")
-                complete_frame += 1
                 render_progress.update(1)
 
         # 逐帧截图以获取序列
@@ -69,5 +74,7 @@ def render_video(data,url):
 
     logging.info("视频渲染完成")
 
-    for remove_num in all_frame:
+    for remove_num in range(all_frame):
         os.remove(f"./temp/{identify_code}_{str(remove_num).zfill(sequence_num_width)}.png")
+
+render_video(data={'score': 3.531, 'aid': '273559420', 'bvid': 'BV1UF411Q7WN', 'title': '道化師協奏会 ～Concert of McDonald～', 'uploader': 'yumeki335', 'copyright': '1', 'play': '3883', 'like': '738', 'coin': '370', 'star': '573', 'pubtime': '2023-07-19 23:30:00', 'adjust_scale': '1', 'part': '1', 'duration': 20, 'start_time': 387.0333125, 'full_time': 20, 'web_prefix': 'http://localhost:7213/', 'video_src': './video/273559420.mp4', 'avatar_src': './avatar/273559420.png', 'cover_src': './cover/273559420.png', 'theme_color': '(239, 73, 47)', 'theme_brightness': 'dark', 'ranking': 8 ,'output_src': 'MainRank_3.mp4'},url="http://127.0.0.1:5173/main")

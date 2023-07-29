@@ -3,17 +3,11 @@ import logging
 import os
 from config import *
 from get_video_info_score import aid_to_score_norm, selected_video_stat, all_video_info
-from program_function import get_img , get_video , average_image_color , exactVideoLength
+from program_function import check_dir , get_img , get_video , average_image_color , exactVideoLength , brightness_judge
 from danmuku_time import danmuku_time
 
 # 新建不存在的文件夹
-dirpaths = ["avatar","cover","data",
-            "fast_view","log","option",
-            "output","output/clip","output/final",
-            "video","cookies"]
-for dirpath in dirpaths:
-    if not os.path.exists(dirpath):
-        os.mkdir(dirpath)
+check_dir()
 
 # 预先黑名单
 blackArr = []
@@ -27,7 +21,7 @@ adjust_dic = {}
 with open("option/adjust.csv",encoding="utf-8-sig",newline='') as adjustfile:
     adjustInfo = csv.DictReader(adjustfile)
     for adj in adjustInfo:
-        adjust_dic[int(adj["uid"])] = adj["k"]
+        adjust_dic[int(adj["uid"])] = adj["adjust_scale"]
 
 co_header = ['ranking','score',
              'aid','bvid',
@@ -36,8 +30,8 @@ co_header = ['ranking','score',
              'pubtime',
              'adjust_scale',
              'part','duration','start_time','full_time',
-             'video_src','cover_src','avatar_src',
-             'theme_color']
+             'web_prefix','video_src','cover_src','avatar_src',
+             'theme_color', 'theme_brightness']
 
 logging.info('生成 CSV 信息表格')
 
@@ -68,10 +62,12 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
             "duration": '未取得',
             "start_time": '未取得',
             "full_time": '未取得',
+            "web_prefix": '未取得',
             "video_src": '未取得',
             "avatar_src": '未取得',
             "cover_src": '未取得',
-            "theme_color": '未取得'
+            "theme_color": '未取得',
+            "theme_brightness": '未取得'
         })
     vid_list = sorted(vid_list,key=lambda x:x["score"],reverse=True) # 排序
     ranking = 0
@@ -81,10 +77,13 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
         after_dict = { "ranking": ranking }
         if ranking <= main_end + side_end + 15:
             pic_src = get_img(vid["aid"])
+            color_rgb = average_image_color(pic_src["cover"])
             after_dict.update({
                 "avatar_src": pic_src["avatar"],
                 "cover_src": pic_src["cover"],
-                "theme_color": str(average_image_color(pic_src["cover"])),
+                "theme_color": str(color_rgb),
+                "theme_brightness": brightness_judge(color_rgb),
+                "web_prefix": web_prefix
                 })
             if ranking <= main_end + 5:
                 vid_src = get_video(vid["aid"])
@@ -96,4 +95,5 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
                                     "full_time" : full_time})
         vid.update(after_dict)
         ranked_list.append(vid)
+    print(ranked_list)
     writer.writerows(ranked_list)

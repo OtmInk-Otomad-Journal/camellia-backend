@@ -2,8 +2,8 @@ import csv
 import asyncio
 import logging
 from bilibili_api import video
-from program_function import get_img , convert_csv , extract_single_column
-
+from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , average_image_color , brightness_judge
+from danmuku_time import danmuku_time
 # 声明变量
 from config import *
 
@@ -26,50 +26,50 @@ for ranked in ranked_list:
                    |title={ranked["title"]}
                    |score={ranked["score"]}
                    |aid={ranked["aid"]}'''+"\n}}\n")
-
-# 主榜封面 & 头像下载
-ranking = 0
-while(ranking < main_end + side_end):
-    vid = ranked_list[ranking]
-    get_img(vid["aid"])
-    ranking += 1
-
 # Pick Up
-
 allArr = []
 pickHeader = ["aid","bvid",
               "title","reason","uploader",
               "part","copyright",
-              "pubtime","full_time","picker"]
-
-# 此处代码有待商榷！暂时不会考虑 Pick Up 的修改。
-# 此处代码有待商榷！暂时不会考虑 Pick Up 的修改。
-# 此处代码有待商榷！暂时不会考虑 Pick Up 的修改。
+              "pubtime","picker",
+              'start_time','full_time',
+              'web_prefix','video_src','cover_src','avatar_src',
+              'theme_color', 'theme_brightness']
 
 with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrites:
-    writer = csv.writer(csvWrites)
-    writer.writerow(pickHeader)
+    writer = csv.DictWriter(csvWrites,pickHeader)
+    writer.writeheader()
     async def getInfo(aid,reason,picker):
         pickAllInfo = video.Video(aid=int(aid))
         picked = await pickAllInfo.get_info()
-        timed = time.strftime("%Y/%m/%d %H:%M:%S",time.localtime(int(picked["pubdate"])))
-        oneArr = [picked["aid"],
-                  picked["bvid"],
-                  picked["title"],
-                  reason,
-                  picked["owner"]["name"],
-                  "1",
-                  picked["copyright"],
-                  timed,
-                  picked["duration"],
-                  picker]
+        vid_src = get_video(picked["aid"])
+        exact_time = exactVideoLength(vid_src)
+        start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time)
+        pic_src = get_img(picked["aid"])
+        color_rgb = average_image_color(pic_src["cover"])
+        oneArr = {
+                "aid": picked["aid"],
+                "bvid": picked["bvid"],
+                "title": picked["title"],
+                "reason": reason,
+                "uploader": picked["owner"]["name"],
+                "copyright": picked["copyright"],
+                "pubtime": time.strftime("%Y/%m/%d %H:%M:%S",time.localtime(int(picked["pubdate"]))),
+                "picker": picker,
+                'start_time': start_time,
+                'full_time': full_time,
+                'web_prefix': web_prefix,
+                'video_src': vid_src,
+                'cover_src': pic_src["cover"],
+                'avatar_src': pic_src["avatar"],
+                'theme_color': str(color_rgb),
+                'theme_brightness': brightness_judge(color_rgb)
+                }
         allArr.append(oneArr)
-        writer.writerow(oneArr)
+        writer.writerows(oneArr)
         logging.info("一个 Pick Up 作品已记录")
-        # 下载头像
-        get_img(picked["aid"])
-    if os.path.exists("./custom/pick.csv"):
-        with open("custom/pick.csv",encoding="utf-8-sig",newline='') as csvfile:
+    if os.path.exists("./data/pick.csv"):
+        with open("./data/pick.csv",encoding="utf-8-sig",newline='') as csvfile:
             pickInfo = csv.DictReader(csvfile)
             for pick in pickInfo:
                 if str(pick["aid"]) in mainArr: # 判断主榜是否已经存在 Pick Up 作品
