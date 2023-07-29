@@ -55,14 +55,8 @@ def get_info_by_time(page_index: int, video_zone: int, time_from: str, time_to: 
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41'
     }
     url = f"https://api.bilibili.com/x/web-interface/newlist_rank?search_type=video&view_type=hot_rank&cate_id={video_zone}&page={page_index}&pagesize={ps}&time_from={time_from}&time_to={time_to}&copy_right={copyright}"
-    response = requests.get(url, headers=headers)
-    response.encoding = "utf-8"
-    result = json.loads(response.text)
-    return_code = result["code"]
-    if return_code != 0:
-        raise Exception(f"Api [newlist_rank] Error: {return_code}, {result['message']}")
-    
-    data = result["data"]
+
+    _, data = apply_response_getter(url, headers)
     video_list: List[Dict[str, Any]] = data["result"]
     for i, video in enumerate(video_list):
         video.pop("arcrank" , None)
@@ -111,9 +105,30 @@ async def get_comments(aid: int, credential: Credential) -> List[Dict]:
         time.sleep(1)
     return reply_trimmer(comments)
 
-def retrieve_video_comment(data_path:str, all_video_info: Dict[int, Dict], force_update=False, max_try_times=10, sleep_inteval=3.) -> Tuple[Set[int], Set[int]]:
+def get_credential(cookie_file_path: str) -> Credential:
     from config_login import sessdata, bili_jct, buvid3, dedeuserid
-    credential = Credential(sessdata=sessdata, bili_jct=bili_jct, buvid3=buvid3)
+    if os.path.isfile(cookie_file_path):
+        cookie_raw = open(cookie_file_path, "r", encoding="utf-8").read()
+        cookie_split = cookie_raw.replace("; ", ";").split(";")
+        cookie = { i.split("=")[0].lower(): i.split("=")[1] for i in cookie_split }
+        sessdata   = cookie.get('sessdata',   sessdata  )
+        bili_jct   = cookie.get('bili_jct',   bili_jct  )
+        buvid3     = cookie.get('buvid3',     buvid3    )
+        dedeuserid = cookie.get('dedeuserid', dedeuserid)
+    else:
+        if cookie_file_path != "":
+            print(f"{cookie_file_path} 不存在")
+
+    if not sessdata or not bili_jct or not dedeuserid:
+        logging.warning("Cookie 信息不完整")
+    else:
+        logging.info("成功获取 Cookie")
+    return Credential(sessdata=sessdata, bili_jct=bili_jct, buvid3=buvid3)
+    
+
+def retrieve_video_comment(data_path:str, all_video_info: Dict[int, Dict], *, credential: Credential, force_update=False, max_try_times=10, sleep_inteval=3.) -> Tuple[Set[int], Set[int]]:
+    # from config_login import sessdata, bili_jct, buvid3, dedeuserid
+    # credential = Credential(sessdata=sessdata, bili_jct=bili_jct, buvid3=buvid3)
     skipped_aid = set()
     invalid_aid_path = os.path.join(data_path, "invalid_aid.pkl")
     if os.path.exists(invalid_aid_path): invalid_aid = marshal.load(open(invalid_aid_path, "rb"))
@@ -223,23 +238,23 @@ def print_aid_info(video_info:Dict[str, Any], comments:List[Dict],
 
 def retrieve_single_video_tag(video_aid: int, max_try_times=10, sleep_inteval=3) -> Tuple[int, List[str]]:
     task = video.Video(aid=video_aid).get_tags
-    status, tags_raw = apply_bilibili_api(task, video_aid, max_try_times, sleep_inteval)
+    status, tags_raw = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
     # tags = [{'id':tag['tag_id'], 'name':tag['tag_name']} for tag in tags_raw]
     tags = [tag['tag_name'] for tag in tags_raw]
     return status, tags
 
 def retrieve_single_video_comment(video_aid: int, credential: Credential, max_try_times=10, sleep_inteval=3.) -> Tuple[int, List[Dict]]:
     task = partial(get_comments, video_aid, credential)
-    status, comments_raw = apply_bilibili_api(task, video_aid, max_try_times, sleep_inteval)
+    status, comments_raw = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
     return status, comments_raw
 
 def retrieve_single_video_stat(video_aid: int, max_try_times=10, sleep_inteval=3.) -> Tuple[int, Dict[str, Any]]:
     task = video.Video(aid=video_aid).get_stat
-    status, stat = apply_bilibili_api(task, video_aid, max_try_times, sleep_inteval)
+    status, stat = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
     assert isinstance(stat, dict)
     return status, stat
 
-def apply_bilibili_api(task: Callable, video_aid: int, max_try_times=10, sleep_inteval=3.) -> Tuple[int, List[Dict]]:
+def apply_bilibili_api(task: Callable, video_aid: int, *, max_try_times=10, sleep_inteval=3.) -> Tuple[int, List[Dict]]:
     try_times = 0
     contents: List[Dict] = []
     while try_times < max_try_times:
@@ -273,3 +288,23 @@ def apply_bilibili_api(task: Callable, video_aid: int, max_try_times=10, sleep_i
             time.sleep(sleep_inteval * (try_times + 1))
     
     return 1, contents
+
+
+def apply_response_getter(url: str, headers: Optional[Dict[str, str]]=None, *, max_try_times=10, sleep_inteval=3.) -> Tuple[int, Dict[str, Any]]:
+    try_times = 0
+    while try_times < max_try_times:
+        response = requests.get(url, headers=headers)
+        response.encoding = "utf-8"
+        result = json.loads(response.text)
+        return_code = result["code"]
+        if return_code != 0:
+            logging.warning(f"未成功获取 {url} 数据: return_code={return_code}, message={result['message']}, 第 {try_times} 次尝试")
+            if return_code == -504:
+                try_times += 1
+                time.sleep(sleep_inteval * (try_times+1))
+                continue
+            else:
+                raise Exception(f"Unhandled Response Code: {return_code}, {result['message']} For {url}")
+        data = result["data"]
+        return 1, data
+    raise Exception(f"Max Try Times Exceeded For {url}")
