@@ -139,6 +139,7 @@ output/
 video/
 cover/
 template/
+temp/
 
 lux.exe
 AutoData/**
