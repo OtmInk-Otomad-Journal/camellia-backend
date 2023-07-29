@@ -65,7 +65,7 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
             "web_prefix": '未取得',
             "video_src": '未取得',
             "avatar_src": '未取得',
-            "cover_src": '未取得',
+            "cover_src": '未取得', #str(video_info["pic"]),
             "theme_color": '未取得',
             "theme_brightness": '未取得'
         })
