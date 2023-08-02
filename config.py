@@ -1,6 +1,7 @@
 import time
 import os
 import threading
+import datetime
 
 if os.path.exists("./time.txt"):
     usedTime = str(open("./time.txt","r").read())
@@ -15,6 +16,11 @@ sleep_inteval = 1             # 各处重复调用 api 的间隔秒数
 base_path = "./AutoData/"       # 数据存储路径
 delta_days = 11                 # 以今天往前的第 delta_days 日开始统计
 range_days = 7                  # 统计 range_days 天的数据
+
+selected_day = "230721"       # 用于 Debug 或其它用途 , YYMMDD
+if selected_day != "":
+    select = datetime.datetime.strptime(selected_day,"%y%m%d")
+    delta_days = (datetime.datetime.now() - select).days + range_days - 1
 
 # 音 MAD: 26; 人力: 126; 鬼调: 22；不要用大分区，如 "119" (鬼畜)
 # 见 https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/video/video_zone.md
@@ -40,6 +46,9 @@ main_end = 15 # 主榜个数
 side_end = 40 # 副榜个数
 side_count = 4 # 副榜显示
 staticFormat = ["png","jpg","jpeg"]
+side_duration = side_end * 1.5
+
+max_main_duration = 200 # 主榜第一最长时长
 
 screen_size = (1920,1080)
 fps = 60
@@ -76,4 +85,4 @@ muitl_limit = threading.Semaphore(3)
 sequence_num_width = 6 # 序列渲染编号最大位数
 
 web_prefix = "http://localhost:7213/" # 用于网页渲染的本地文件获取地址
-render_prefix = "http://127.0.0.1:5173" # 用于网页渲染的在线模板端
+render_prefix = "http://127.0.0.1:5174" # 用于网页渲染的在线模板端

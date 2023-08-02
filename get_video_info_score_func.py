@@ -110,6 +110,7 @@ def get_credential(cookie_file_path: str) -> Credential:
     if os.path.isfile(cookie_file_path):
         cookie_raw = open(cookie_file_path, "r", encoding="utf-8").read()
         cookie_split = cookie_raw.replace("; ", ";").split(";")
+        cookie_split.remove("")
         cookie = { i.split("=")[0].lower(): i.split("=")[1] for i in cookie_split }
         sessdata   = cookie.get('sessdata',   sessdata  )
         bili_jct   = cookie.get('bili_jct',   bili_jct  )
