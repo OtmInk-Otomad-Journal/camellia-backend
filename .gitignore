@@ -148,3 +148,6 @@ AutoData/**
 
 .vscode
 config_login.py
+
+*.mp4
+time.txt
