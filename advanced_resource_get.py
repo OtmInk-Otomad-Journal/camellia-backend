@@ -2,7 +2,7 @@ import csv
 import asyncio
 import logging
 from bilibili_api import video
-from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , average_image_color , brightness_judge
+from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color
 from danmuku_time import danmuku_time
 # 声明变量
 from config import *
@@ -34,7 +34,7 @@ pickHeader = ["aid","bvid",
               "pubtime","picker",
               'start_time','full_time',
               'web_prefix','video_src','cover_src','avatar_src',
-              'theme_color', 'theme_brightness']
+              'light_color', 'dark_color']
 
 with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrites:
     writer = csv.DictWriter(csvWrites,pickHeader)
@@ -46,7 +46,7 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
         exact_time = exactVideoLength(vid_src)
         start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time)
         pic_src = get_img(picked["aid"])
-        color_rgb = average_image_color(pic_src["cover"])
+        color_rgb = calc_color(pic_src["cover"])
         oneArr = {
                 "aid": picked["aid"],
                 "bvid": picked["bvid"],
@@ -62,8 +62,8 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
                 'video_src': vid_src,
                 'cover_src': pic_src["cover"],
                 'avatar_src': pic_src["avatar"],
-                'theme_color': str(color_rgb),
-                'theme_brightness': brightness_judge(color_rgb)
+                'light_color': str(color_rgb[0]),
+                'dark_color': str(color_rgb[1]),
                 }
         allArr.append(oneArr)
         writer.writerows(oneArr)

@@ -48,7 +48,7 @@ side_count = 4 # 副榜显示
 staticFormat = ["png","jpg","jpeg"]
 side_duration = side_end * 1.5
 
-max_main_duration = 200 # 主榜第一最长时长
+max_main_duration = 60 # 主榜第一最长时长
 
 screen_size = (1920,1080)
 fps = 60
@@ -80,9 +80,10 @@ all_render_format = {
 read_format = {
     "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
 }
-muitl_limit = threading.Semaphore(3)
+muitl_limit = threading.Semaphore(15)
+render_max_threading_count = 1
 
 sequence_num_width = 6 # 序列渲染编号最大位数
 
 web_prefix = "http://localhost:7213/" # 用于网页渲染的本地文件获取地址
-render_prefix = "http://127.0.0.1:5174" # 用于网页渲染的在线模板端
+render_prefix = "http://127.0.0.1:5173" # 用于网页渲染的在线模板端

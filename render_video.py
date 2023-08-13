@@ -22,7 +22,7 @@ def render_video(data,url,audio = None):
 
     logging.info(f"启动进程 {identify_code}")
 
-    max_threading_count = 2
+    max_threading_count = render_max_threading_count
 
     all_frame = int(float(full_duration)) * fps
 
@@ -43,11 +43,11 @@ def render_video(data,url,audio = None):
             opt.add_argument("--headless")
             opt.add_argument("--enable-webgl")
             opt.add_argument("--allow-file-access-from-files")
-            opt.add_argument("--disable-extensions")
-            opt.add_argument("--disable-software-rasterizer")
-            opt.add_argument('--no-sandbox')
-            opt.add_argument('--ignore-certificate-errors')
-            opt.add_argument('--allow-running-insecure-content')
+            # opt.add_argument("--disable-extensions")
+            # opt.add_argument("--disable-software-rasterizer")
+            # opt.add_argument('--no-sandbox')
+            # opt.add_argument('--ignore-certificate-errors')
+            # opt.add_argument('--allow-running-insecure-content')
             # ChromeDriverManager().install()
             driver = webdriver.Edge(service=ChromeService(),options=opt)
             driver.get(url)
@@ -80,6 +80,8 @@ def render_video(data,url,audio = None):
         sequence_audio = ffmpeg.input(audio_file,t=full_duration)
     else:
         sequence_audio = ffmpeg.input(video_file,ss=start_time,t=full_duration).audio
+        sequence_audio = sequence_audio.filter("afade",t="in",d=1)
+        sequence_audio = sequence_audio.filter("afade",t="out",st=full_duration-1,d=1)
     ffmpeg.output(sequence_video,sequence_audio,output_file,**render_format).run()
 
     logging.info("视频渲染完成")

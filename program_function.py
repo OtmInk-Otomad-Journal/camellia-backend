@@ -4,9 +4,11 @@ import subprocess
 import codecs
 import csv
 import ffmpeg
+import html
 from io import BytesIO
 from PIL import Image
 from config import *
+import numpy as np
 from haishoku.haishoku import Haishoku
 
 def get_img(aid):
@@ -86,12 +88,39 @@ def average_image_color(file):
     dominant = Haishoku.getDominant(file)
     return dominant
 
-def brightness_judge(rgb):
-    gray = 0.2126 * rgb[0] + 0.7152 * rgb[1] + 0.0722 * rgb[2]
-    if gray >= 128:
-        return 'light'
-    else:
-        return 'dark'
+def average_image_palette(file):
+    palette = Haishoku.getPalette(file)
+    return palette
+
+def calc_color(file):
+    dark_mean = 90
+    light_mean = 229
+    color_palette = average_image_palette(file)
+    outnum = 0
+    palette_num = len(color_palette)
+    for single_color in color_palette:
+        outnum += 1
+        std = std_judge(single_color[1])
+        if std <= 4.5:
+            if not (outnum >= palette_num):
+                if not color_palette[outnum + 1][0] < 0.15:
+                    continue
+        mean = np.mean(single_color[1])
+        light_adjust = light_mean / mean
+        dark_adjust = dark_mean / mean
+        light_color = adjust_brightness(single_color[1],light_adjust)
+        dark_color = adjust_brightness(single_color[1],dark_adjust)
+        return [ light_color , dark_color ]
+
+def adjust_brightness(rgb,scale):
+    return ( rgb[0] * scale , rgb[1] * scale , rgb[2] * scale )
+
+def show_average_image_color(file):
+    dominant = Haishoku.showPalette(file)
+
+def std_judge(rgb):
+    std = np.std(rgb)
+    return std
 
 def check_dir():
     dirpaths = ["avatar","cover","data",
@@ -113,3 +142,9 @@ def check_dir():
             header = ["name","uid","adjust_scale"]
             adjustInfo = csv.DictWriter(adjustfile,header)
             adjustInfo.writeheader()
+
+def html_unescape(dict):
+    out_dict = {}
+    for key,value in dict.items():
+        out_dict.update({ key: html.unescape(str(value)) })
+    return out_dict
