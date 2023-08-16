@@ -2,8 +2,8 @@ import logging
 import os
 import threading
 
-from danmuku_time import danmuku_time
-from program_function import exactVideoLength , convert_csv , extract_single_column
+from all_create import AllVideo
+from program_function import convert_csv , extract_single_column
 from render_video import render_video
 # 声明变量
 from config import *
@@ -46,7 +46,7 @@ for viding in ranked_list:
             url = f"{render_prefix}/main"
             viding.update({
                 "output_src": f"./output/clip/MainRank_1.mp4",
-                "side_duration": int(float(viding["full_time"]) * 0.45),
+                "side_duration": int(float(viding["full_time"]) * 0.6),
                 "more_data": ranked_list[main_end:side_end]
             })
             muitl_limit.acquire()
@@ -80,12 +80,6 @@ for picking in picked_list:
 
 for sq in rend_q:
     sq.join()
-
-# 开头合成
-if os.path.exists("./output/clip/Opening.mp4"):
-    pass
-else:
-    render_simple()
 
 # 总拼接
 AllVideo(main_end,picked_list)

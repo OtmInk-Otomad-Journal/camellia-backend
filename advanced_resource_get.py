@@ -18,14 +18,15 @@ for ranked in ranked_list:
     if ranks > main_end + side_end:
         break
     with open(f"./fast_view/bili_{usedTime}.txt","a",encoding="utf-8-sig") as fast:
-        fast.write("主榜\n")
+        if ranks == 1:
+            fast.write("主榜\n")
         fast.write(f"{ranked['ranking']}\t{ranked['bvid']}\n")
     with open(f"./fast_view/wiki_{usedTime}.txt","a",encoding="utf-8-sig") as fast:
         fast.write("{{"+f'''OtmRanking/brick
-                   |ranking={ranked["ranking"]}
-                   |title={ranked["title"]}
-                   |score={ranked["score"]}
-                   |aid={ranked["aid"]}'''+"\n}}\n")
+|ranking={ranked["ranking"]}
+|title={ranked["title"]}
+|score={ranked["score"]}
+|aid={ranked["aid"]}'''+"\n}}\n")
 # Pick Up
 allArr = []
 pickHeader = ["aid","bvid",
@@ -68,8 +69,8 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
         allArr.append(oneArr)
         writer.writerows(oneArr)
         logging.info("一个 Pick Up 作品已记录")
-    if os.path.exists("./data/pick.csv"):
-        with open("./data/pick.csv",encoding="utf-8-sig",newline='') as csvfile:
+    if os.path.exists("./data/pick_filtered.csv"):
+        with open("./data/pick_filtered.csv",encoding="utf-8-sig",newline='') as csvfile:
             pickInfo = csv.DictReader(csvfile)
             for pick in pickInfo:
                 if str(pick["aid"]) in mainArr: # 判断主榜是否已经存在 Pick Up 作品
@@ -85,11 +86,12 @@ picks = 0
 for pickOne in allArr:
     picks += 1
     with open(f"./fast_view/bili_{usedTime}.txt","a",encoding="utf-8-sig") as fast:
-        fast.write("Pick Up\n")
+        if picks == 1:
+            fast.write("Pick Up\n")
         fast.write(f"{picks}\t{pickOne[1]}\n")
     with open(f"./fast_view/wiki_{usedTime}.txt","a",encoding="utf-8-sig") as fast:
         fast.write("{{"+f'''OtmRanking/brick
-                   |ranking={picks}
-                   |title={pickOne[2]}
-                   |score=PICK UP
-                   |aid={pickOne[0]}'''+"\n}}\n")
+|ranking={picks}
+|title={pickOne[2]}
+|score=PICK UP
+|aid={pickOne[0]}'''+"\n}}\n")

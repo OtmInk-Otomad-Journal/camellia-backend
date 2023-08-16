@@ -48,7 +48,7 @@ side_count = 4 # 副榜显示
 staticFormat = ["png","jpg","jpeg"]
 side_duration = side_end * 1.5
 
-max_main_duration = 60 # 主榜第一最长时长
+max_main_duration = 120 # 主榜第一最长时长
 
 screen_size = (1920,1080)
 fps = 60
@@ -80,7 +80,7 @@ all_render_format = {
 read_format = {
     "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
 }
-muitl_limit = threading.Semaphore(15)
+muitl_limit = threading.Semaphore(5)
 render_max_threading_count = 1
 
 sequence_num_width = 6 # 序列渲染编号最大位数

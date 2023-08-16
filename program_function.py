@@ -98,25 +98,26 @@ def calc_color(file):
     color_palette = average_image_palette(file)
     outnum = 0
     palette_num = len(color_palette)
+    print(color_palette)
     for single_color in color_palette:
+        print(single_color)
         outnum += 1
         std = std_judge(single_color[1])
-        if std <= 4.5:
+        print(std)
+        if std <= 15: # 计算标准差，以便选取更为鲜艳的颜色
             if not (outnum >= palette_num):
-                if not color_palette[outnum + 1][0] < 0.15:
+                if not color_palette[outnum][0] < 0.1:
                     continue
         mean = np.mean(single_color[1])
         light_adjust = light_mean / mean
         dark_adjust = dark_mean / mean
         light_color = adjust_brightness(single_color[1],light_adjust)
         dark_color = adjust_brightness(single_color[1],dark_adjust)
+        print([ light_color , dark_color ])
         return [ light_color , dark_color ]
 
 def adjust_brightness(rgb,scale):
     return ( rgb[0] * scale , rgb[1] * scale , rgb[2] * scale )
-
-def show_average_image_color(file):
-    dominant = Haishoku.showPalette(file)
 
 def std_judge(rgb):
     std = np.std(rgb)
@@ -126,7 +127,7 @@ def check_dir():
     dirpaths = ["avatar","cover","data",
             "fast_view","log","option",
             "output","output/clip","output/final",
-            "video","cookies","temp"]
+            "video","cookies","temp","option/ads"]
     for dirpath in dirpaths:
         if not os.path.exists(dirpath):
             os.mkdir(dirpath)
