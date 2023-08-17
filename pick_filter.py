@@ -30,6 +30,7 @@ with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
             webbrowser.open(url, new=0, autoraise=True) # 启动浏览器以浏览
 
             top = tkinter.Tk()
+            top.title("音之墨小周刊 Pick Up 简要过滤")
             def tickCommand(root):
                 writefile.writerow({
                     "aid": aid,
@@ -39,16 +40,18 @@ with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
                 root.destroy()
             def noCommand(root):
                 root.destroy()
-
+            # 推荐标题
+            text_title = tkinter.Label(text=picker,font=("HarmonyOS Sans SC Bold",20),justify='left',pady=10)
+            text_title.pack()
+            # 推荐理由显示
             text = item["推荐理由（必填）"]
-            textShow = tkinter.Text()
-            textShow.insert('1.0',f"{picker}\n\n{text}")
+            textShow = tkinter.Text(font=("HarmonyOS Sans SC",12))
+            textShow.insert('1.0',f"{text}")
             textShow.pack()
             tickButton = tkinter.Button(text="选择",font=("HarmonyOS Sans SC",20),command = lambda: tickCommand(top))
             noButton = tkinter.Button(text="废弃",font=("HarmonyOS Sans SC",20),command = lambda: noCommand(top))
-            tickButton.pack()
-            noButton.pack()
+            tickButton.pack(side='left',padx=50,pady=10)
+            noButton.pack(side='right',padx=50,pady=10)
             top.mainloop()
 
-shutil.move("./fast_check/source/pick.csv","./custom/pick.csv")
 os.system("python advanced_resource_get.py")

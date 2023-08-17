@@ -25,8 +25,8 @@ mainArr = extract_single_column(ranked_list,"aid",main_end)
 
 # PICK UP 数据
 picked_list = []
-if os.path.exists(f"./data/pick.csv"):
-    picked_list = convert_csv(f"./data/pick.csv")
+if os.path.exists(f"./data/picked.csv"):
+    picked_list = convert_csv(f"./data/picked.csv")
 
 # 主榜段落合成
 render_times = 0

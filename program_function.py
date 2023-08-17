@@ -59,7 +59,7 @@ def get_video(aid,part = 1):
         return f"./video/{aid}.mp4"
     while(not os.path.exists(f"./video/{aid}.mp4")):
         logging.info(f"下载 av{aid} 视频...")
-        subprocess.Popen(command + ["-o","./video","-O",aid,f"av{aid}{p_src}"]).wait()
+        subprocess.Popen(command + ["-o","./video","-O",str(aid),f"av{aid}{p_src}"]).wait()
     logging.info(f"av{aid} 视频下载完成")
     return f"./video/{aid}.mp4"
 
