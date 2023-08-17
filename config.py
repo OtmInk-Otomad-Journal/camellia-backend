@@ -80,7 +80,7 @@ all_render_format = {
 read_format = {
     "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
 }
-muitl_limit = threading.Semaphore(5)
+muitl_limit = threading.Semaphore(30)
 render_max_threading_count = 1
 
 sequence_num_width = 6 # 序列渲染编号最大位数

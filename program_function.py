@@ -98,12 +98,9 @@ def calc_color(file):
     color_palette = average_image_palette(file)
     outnum = 0
     palette_num = len(color_palette)
-    print(color_palette)
     for single_color in color_palette:
-        print(single_color)
         outnum += 1
         std = std_judge(single_color[1])
-        print(std)
         if std <= 15: # 计算标准差，以便选取更为鲜艳的颜色
             if not (outnum >= palette_num):
                 if not color_palette[outnum][0] < 0.1:
@@ -113,7 +110,6 @@ def calc_color(file):
         dark_adjust = dark_mean / mean
         light_color = adjust_brightness(single_color[1],light_adjust)
         dark_color = adjust_brightness(single_color[1],dark_adjust)
-        print([ light_color , dark_color ])
         return [ light_color , dark_color ]
 
 def adjust_brightness(rgb,scale):
