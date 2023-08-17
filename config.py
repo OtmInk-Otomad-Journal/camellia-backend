@@ -17,7 +17,7 @@ base_path = "./AutoData/"       # 数据存储路径
 delta_days = 11                 # 以今天往前的第 delta_days 日开始统计
 range_days = 7                  # 统计 range_days 天的数据
 
-selected_day = "230721"       # 用于 Debug 或其它用途 , YYMMDD
+selected_day = ""       # 用于 Debug 或其它用途 , YYMMDD
 if selected_day != "":
     select = datetime.datetime.strptime(selected_day,"%y%m%d")
     delta_days = (datetime.datetime.now() - select).days + range_days - 1
