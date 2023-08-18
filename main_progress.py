@@ -49,7 +49,7 @@ for viding in ranked_list:
         viding.update({
             "output_src": f"./output/clip/MainRank_1.mp4",
             "side_duration": int(float(viding["full_time"]) * 0.6),
-            "more_data": ranked_list[main_end:side_end]
+            "more_data": ranked_list[main_end:main_end+side_end]
         })
         muitl_limit.acquire()
         rend_s = threading.Thread(target=render_video,args=(viding,url))
