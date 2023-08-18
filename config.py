@@ -48,40 +48,34 @@ side_count = 4 # 副榜显示
 staticFormat = ["png","jpg","jpeg"]
 side_duration = side_end * 1.5
 
-max_main_duration = 120 # 主榜第一最长时长
+max_main_duration = 70 # 主榜第一最长时长
 
 screen_size = (1920,1080)
 fps = 60
 
 screenRatio = 16 / 9
 
-avatar_size = (70,70)
-cover_size = (401,251)
-side_avatar_size = (38,38)
-side_cover_size = (276,156)
-
-end_logo = True
-
 main_to_side_offset = -1
 
 insert_count = 5 # 主榜中断个数
 
 render_format = {
-    "vcodec": "h264_nvenc", # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
+    "vcodec": "h264_qsv", # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
     "video_bitrate" : "10000k",
     "audio_bitrate" : "320k"
 }
 all_render_format = {
-    "vcodec": "h264_nvenc", # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
+    "vcodec": "h264_qsv", # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
     "video_bitrate" : "10000k",
     "audio_bitrate" : "320k",
     "r": "60"
 }
 read_format = {
-    "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
+    # "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
 }
-muitl_limit = threading.Semaphore(30)
-render_max_threading_count = 1
+muitl_limit = threading.Semaphore(1)
+pack_limit = threading.Semaphore(1)
+render_max_threading_count = 10
 
 sequence_num_width = 6 # 序列渲染编号最大位数
 

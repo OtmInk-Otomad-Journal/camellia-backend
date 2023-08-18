@@ -2,7 +2,7 @@ import csv
 import asyncio
 import logging
 from bilibili_api import video
-from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color
+from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape
 from danmuku_time import danmuku_time
 # 声明变量
 from config import *
@@ -66,8 +66,9 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
                 'light_color': str(color_rgb[0]),
                 'dark_color': str(color_rgb[1]),
                 }
+        oneArr = html_unescape(oneArr)
         allArr.append(oneArr)
-        writer.writerows(oneArr)
+        writer.writerow(oneArr)
         logging.info("一个 Pick Up 作品已记录")
     if os.path.exists("./data/pick_filtered.csv"):
         with open("./data/pick_filtered.csv",encoding="utf-8-sig",newline='') as csvfile:
@@ -88,10 +89,10 @@ for pickOne in allArr:
     with open(f"./fast_view/bili_{usedTime}.txt","a",encoding="utf-8-sig") as fast:
         if picks == 1:
             fast.write("Pick Up\n")
-        fast.write(f"{picks}\t{pickOne[1]}\n")
+        fast.write(f"{picks}\t{pickOne['bvid']}\n")
     with open(f"./fast_view/wiki_{usedTime}.txt","a",encoding="utf-8-sig") as fast:
         fast.write("{{"+f'''OtmRanking/brick
 |ranking={picks}
-|title={pickOne[2]}
+|title={pickOne['title']}
 |score=PICK UP
-|aid={pickOne[0]}'''+"\n}}\n")
+|aid={pickOne['aid']}'''+"\n}}\n")
