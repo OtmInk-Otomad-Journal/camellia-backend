@@ -250,8 +250,21 @@ def retrieve_single_video_comment(video_aid: int, credential: Credential, max_tr
     return status, comments_raw
 
 def retrieve_single_video_stat(video_aid: int, max_try_times=10, sleep_inteval=3.) -> Tuple[int, Dict[str, Any]]:
-    task = video.Video(aid=video_aid).get_stat
-    status, stat = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
+    # task = video.Video(aid=video_aid).get_stat
+    # status, stat = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
+
+    ### 临时补救 API
+    time.sleep(0.2)
+    logging.info(f"获取 av{video_aid}")
+    temp_dict = requests.get("https://api.bilibili.com/x/web-interface/view",{"aid": video_aid})
+    status = temp_dict.status_code
+    try:
+        stat_json = temp_dict.json()
+        stat = stat_json["data"]["stat"]
+        stat.update({"copyright":stat_json["data"]["copyright"]})
+    except:
+        stat = None
+
     assert isinstance(stat, dict)
     return status, stat
 
