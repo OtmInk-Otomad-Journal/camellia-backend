@@ -106,6 +106,9 @@ def calc_color(file):
                 if not color_palette[outnum][0] < 0.1:
                     continue
         mean = np.mean(single_color[1])
+        if not mean > 0: # 防止纯黑以至分母乘 0
+            single_color[1] = (1,1,1)
+            mean = 1
         light_adjust = light_mean / mean
         dark_adjust = dark_mean / mean
         light_color = adjust_brightness(single_color[1],light_adjust)

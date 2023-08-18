@@ -56,19 +56,33 @@ def render_video(data,url,audio = None):
             driver.set_window_size(screen_size[0],screen_size[1])
             time.sleep(2)
             driver.execute_script(f"inject({json_info})")
+
+            # 持续刷新保证视频产出。
             driver.execute_script(f"seek_frame({frames[0]},{fps},{start_time})")
-            time.sleep(7.5) # 使得视频充分加载
+            time.sleep(2)
+            for y in range(1):
+                for fresh in range(0,len(frames),15):
+                    driver.execute_script(f"seek_frame({int(frames[0])+fresh},{fps},{start_time})")
+            time.sleep(2)
+
             for s_frame in frames:
                 if not os.path.exists(f"./temp/{identify_code}_{str(s_frame).zfill(sequence_num_width)}.png"): # 断点续渲
-                    for change_time in range(5):
-                        driver.execute_script(f"seek_frame({s_frame},{fps},{start_time})")
+                    driver.execute_script(f"seek_frame({s_frame},{fps},{start_time})")
+                    # stat = driver.execute_script(f"return check_status()")
+                    # while(not stat):
+                    #     print(stat)
+                    #     time.sleep(0.01)
+                    #     driver.execute_script(f"return check_status()")
                     # time.sleep(0.1)
                     # driver.execute_script(f"myVideo.currentTime = {frame / fps}")
                     driver.get_screenshot_as_file(f"./temp/{identify_code}_{str(s_frame).zfill(sequence_num_width)}.png")
                 render_progress.update(1)
 
         # 逐帧截图以获取序列
-        for frame_list in split_list_n_list(range(all_frame),max_threading_count):
+        threading_count = int(full_duration) // slip_second + 1
+        if threading_count >= max_threading_count:
+            threading_count = max_threading_count
+        for frame_list in split_list_n_list(range(all_frame),threading_count):
             render_single = threading.Thread(target=render_frame,args=[frame_list])
             render_single.start()
             render_quene.append(render_single)

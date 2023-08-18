@@ -45,22 +45,18 @@ for viding in ranked_list:
         continue
 
     if render_times == 1:
-        # 副榜段落合成
-        if os.path.exists("./output/clip/SideRank.mp4"):
-            pass
-        else:
-            url = f"{render_prefix}/main"
-            viding.update({
-                "output_src": f"./output/clip/MainRank_1.mp4",
-                "side_duration": int(float(viding["full_time"]) * 0.6),
-                "more_data": ranked_list[main_end:side_end]
-            })
-            muitl_limit.acquire()
-            rend_s = threading.Thread(target=render_video,args=(viding,url))
-            rend_s.start()
-            rend_q.append(rend_s)
-            # render_video(viding,url)
-            continue
+        url = f"{render_prefix}/main"
+        viding.update({
+            "output_src": f"./output/clip/MainRank_1.mp4",
+            "side_duration": int(float(viding["full_time"]) * 0.6),
+            "more_data": ranked_list[main_end:side_end]
+        })
+        muitl_limit.acquire()
+        rend_s = threading.Thread(target=render_video,args=(viding,url))
+        rend_s.start()
+        rend_q.append(rend_s)
+        # render_video(viding,url)
+        continue
     # 否则正常渲染。
     url = f"{render_prefix}/main"
     viding.update({ "output_src": f"./output/clip/MainRank_{render_times}.mp4" })

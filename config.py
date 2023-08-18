@@ -73,11 +73,12 @@ all_render_format = {
 read_format = {
     # "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
 }
-muitl_limit = threading.Semaphore(1)
+muitl_limit = threading.Semaphore(15)
 pack_limit = threading.Semaphore(1)
-render_max_threading_count = 10
+render_max_threading_count = 8
+slip_second = 20
 
 sequence_num_width = 6 # 序列渲染编号最大位数
 
 web_prefix = "http://localhost:7213/" # 用于网页渲染的本地文件获取地址
-render_prefix = "http://127.0.0.1:5173" # 用于网页渲染的在线模板端
+render_prefix = "http://localhost:7214" # 用于网页渲染的在线模板端

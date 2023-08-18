@@ -124,3 +124,4 @@ def AllVideo(main_end,pickArr):
         for temp_f in files:
             os.remove(f"{tempPath}/{temp_f}")
     os.remove("./time.txt")
+    os.remove("./data/picked.csv")
