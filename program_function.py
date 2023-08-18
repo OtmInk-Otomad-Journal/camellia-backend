@@ -4,6 +4,7 @@ import subprocess
 import codecs
 import csv
 import ffmpeg
+import colorsys
 import html
 from io import BytesIO
 from PIL import Image
@@ -93,27 +94,40 @@ def average_image_palette(file):
     return palette
 
 def calc_color(file):
-    dark_mean = 90
-    light_mean = 229
+    # dark_mean = 90
+    # light_mean = 229
     color_palette = average_image_palette(file)
     outnum = 0
     palette_num = len(color_palette)
     for single_color in color_palette:
+        # outnum += 1
+        # std = std_judge(single_color[1])
+        # if std <= 15: # 计算标准差，以便选取更为鲜艳的颜色
+        #     if not (outnum >= palette_num):
+        #         if not color_palette[outnum][0] < 0.1:
+        #             continue
+        # mean = np.mean(single_color[1])
+        # if not mean > 0: # 防止纯黑以至分母乘 0
+        #     single_color[1] = (1,1,1)
+        #     mean = 1
+        # light_adjust = light_mean / mean
+        # dark_adjust = dark_mean / mean
+        # light_color = adjust_brightness(single_color[1],light_adjust)
+        # dark_color = adjust_brightness(single_color[1],dark_adjust)
         outnum += 1
-        std = std_judge(single_color[1])
-        if std <= 15: # 计算标准差，以便选取更为鲜艳的颜色
+        hsl = rgb2hsl(single_color[1])
+        if hsl[1] < 0.25:
             if not (outnum >= palette_num):
-                if not color_palette[outnum][0] < 0.1:
+                if not color_palette[outnum][0] < 0.15:
                     continue
-        mean = np.mean(single_color[1])
-        if not mean > 0: # 防止纯黑以至分母乘 0
-            single_color[1] = (1,1,1)
-            mean = 1
-        light_adjust = light_mean / mean
-        dark_adjust = dark_mean / mean
-        light_color = adjust_brightness(single_color[1],light_adjust)
-        dark_color = adjust_brightness(single_color[1],dark_adjust)
+        light_color = f'({hsl[0]},{hsl[1]*100}%,75%)'
+        dark_color = f'({hsl[0]},{hsl[1]*100}%,35%)'
         return [ light_color , dark_color ]
+
+def rgb2hsl(rgb):
+    hls = colorsys.rgb_to_hls(rgb[0] / 255,rgb[1] / 255,rgb[2] / 255)
+    hsl = (hls[0] * 360, hls[2] , hls[1])
+    return hsl
 
 def adjust_brightness(rgb,scale):
     return ( rgb[0] * scale , rgb[1] * scale , rgb[2] * scale )

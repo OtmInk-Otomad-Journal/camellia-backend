@@ -102,4 +102,5 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
                                     "full_time" : full_time})
         vid.update(after_dict)
         ranked_list.append(vid)
+    print(ranked_list)
     writer.writerows(ranked_list)
