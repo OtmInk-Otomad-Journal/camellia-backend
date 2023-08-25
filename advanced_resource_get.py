@@ -74,6 +74,7 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
         with open("./data/pick_filtered.csv",encoding="utf-8-sig",newline='') as csvfile:
             pickInfo = csv.DictReader(csvfile)
             for pick in pickInfo:
+                time.sleep(0.1)
                 if str(pick["aid"]) in mainArr: # 判断主榜是否已经存在 Pick Up 作品
                     continue
                 asyncio.get_event_loop().run_until_complete(getInfo(pick["aid"],
