@@ -27,10 +27,10 @@ co_header = ['ranking','score',
              'title','uploader','copyright',
              'play','like','coin','star',
              'pubtime',
-             'adjust_scale',
+             'adjust_scale','prescore',
              'part','duration','start_time','full_time',
              'web_prefix','video_src','cover_src','avatar_src',
-             'light_color', 'dark_color']
+             'light_color', 'dark_color', 'score_add']
 
 logging.info('生成 CSV 信息表格')
 
@@ -43,8 +43,10 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
         if int(video_aid) in blackArr:
             continue
         normk = adjust_dic.get(int(video_info["mid"]), 1)
-        norm_score = float('%.3f' % (aid_to_score_norm[video_aid] * float(normk)))
+        prescore = aid_to_score_norm[video_aid]
+        norm_score = float('%.3f' % (prescore * float(normk)))
         vid_list.append({
+            "prescore": prescore,
             "score": norm_score,
             "aid": str(video_aid),
             "bvid": str(video_info["bvid"]),
@@ -66,7 +68,8 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
             "avatar_src": '未取得',
             "cover_src": '未取得', #str(video_info["pic"]),
             "light_color": '未取得',
-            "dark_color": '未取得'
+            "dark_color": '未取得',
+            "score_add": ''
         })
     vid_list = sorted(vid_list,key=lambda x:float(x["score"]),reverse=True) # 排序
     ranking = 0
