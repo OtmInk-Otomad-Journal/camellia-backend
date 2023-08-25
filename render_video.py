@@ -26,7 +26,7 @@ def render_video(data,url,audio = None):
 
     max_threading_count = render_max_threading_count
 
-    all_frame = int(float(full_duration)) * fps
+    all_frame = int(float(full_duration) * fps)
 
     render_quene = []
 

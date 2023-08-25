@@ -103,7 +103,7 @@ def AllVideo(main_end,pickArr):
         AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
         AllArr.append(ffVideo("./template/pass/pass.mp4"))
     rank_src = main_rank_column[1]
-    AllArr.append(outVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
+    AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
 
     onum = 0
     for items in AllArr:
