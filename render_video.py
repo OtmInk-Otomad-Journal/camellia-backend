@@ -12,7 +12,6 @@ from config import *
 
 def pack_video(sv,sa,op,rf):
     ffmpeg.output(sv,sa,op,**rf).run()
-    pack_limit.release()
 
 def render_video(data,url,audio = None):
     start_time = data["start_time"]
@@ -100,10 +99,7 @@ def render_video(data,url,audio = None):
         sequence_audio = ffmpeg.input(video_file,ss=start_time,t=full_duration).audio
         sequence_audio = sequence_audio.filter("afade",t="in",d=1)
         sequence_audio = sequence_audio.filter("afade",t="out",st=float(full_duration)-1,d=1)
-    pack_limit.acquire()
-    pack_s = threading.Thread(target=pack_video,args=(sequence_video,sequence_audio,output_file,render_format))
-    pack_s.start()
-    pack_s.join()
+    pack_video(sequence_video,sequence_audio,output_file,render_format)
 
     logging.info("视频渲染完成")
 
