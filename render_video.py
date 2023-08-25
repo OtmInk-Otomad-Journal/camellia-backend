@@ -78,7 +78,7 @@ def render_video(data,url,audio = None):
                 render_progress.update(1)
 
         # 逐帧截图以获取序列
-        threading_count = int(full_duration) // slip_second + 1
+        threading_count = float(full_duration) // slip_second + 1
         if threading_count >= max_threading_count:
             threading_count = max_threading_count
         for frame_list in split_list_n_list(range(all_frame),threading_count):
