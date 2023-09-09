@@ -47,6 +47,7 @@ def exactVideoLength(url):
 
 # 视频下载
 def get_video(aid,part = 1):
+    d_time = 0
     command = ["./lux"]
     if part > 1:
         p_src = f"?p={part}"
@@ -59,10 +60,22 @@ def get_video(aid,part = 1):
         logging.info(f"av{aid} 视频已经存在")
         return f"./video/{aid}.mp4"
     while(not os.path.exists(f"./video/{aid}.mp4")):
-        logging.info(f"下载 av{aid} 视频...")
+        d_time += 1
+        logging.info(f"第 {d_time} 次下载 av{aid} 视频...")
         subprocess.Popen(command + ["-o","./video","-O",str(aid),f"av{aid}{p_src}"]).wait()
+    if d_time != 0:
+        any_to_avc(f"./video/{aid}.mp4")
     logging.info(f"av{aid} 视频下载完成")
     return f"./video/{aid}.mp4"
+
+# 编码转换
+def any_to_avc(file):
+    format = ffmpeg.probe(file)['streams'][0]['codec_name']
+    if format not in ['h264','avc']:
+        rename = f"ori_{file}"
+        os.rename(file,rename)
+        video = ffmpeg.input(rename)
+        ffmpeg.output(video,file,**render_format).run()
 
 # CSV 表格转换
 def convert_csv(file):

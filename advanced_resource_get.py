@@ -4,6 +4,8 @@ import logging
 from bilibili_api import video
 from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape
 from danmuku_time import danmuku_time
+
+from get_video_info_score_func import retrieve_single_video_stat
 # 声明变量
 from config import *
 
@@ -40,9 +42,9 @@ pickHeader = ["aid","bvid",
 with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrites:
     writer = csv.DictWriter(csvWrites,pickHeader)
     writer.writeheader()
-    async def getInfo(aid,reason,picker):
-        pickAllInfo = video.Video(aid=int(aid))
-        picked = await pickAllInfo.get_info()
+    def getInfo(aid,reason,picker):
+        pickAllInfo = retrieve_single_video_stat(video_aid=int(aid))
+        picked = pickAllInfo[1]
         vid_src = get_video(picked["aid"])
         exact_time = exactVideoLength(vid_src)
         start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time)
@@ -77,9 +79,7 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
                 time.sleep(0.5)
                 if str(pick["aid"]) in mainArr: # 判断主榜是否已经存在 Pick Up 作品
                     continue
-                asyncio.get_event_loop().run_until_complete(getInfo(pick["aid"],
-                                                                    pick["reason"],
-                                                                    pick["picker"]))
+                getInfo(pick["aid"],pick["reason"],pick["picker"])
 if len(allArr) == 0:
     os.remove(f"./data/picked.csv")
 

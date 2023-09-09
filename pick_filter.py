@@ -10,7 +10,7 @@ from program_function import turnAid
 
 with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
     listed = csv.DictReader(csvfile)
-    min_time = datetime.datetime.today() + datetime.timedelta(days=-8)
+    min_time = datetime.datetime.today() + datetime.timedelta(days=-100)
     with open("./data/pick_filtered.csv","w",encoding="utf-8-sig",newline='') as csvwrite:
         writeheader = ["aid","reason","picker","owner"]
         writefile = csv.DictWriter(csvwrite,writeheader)
