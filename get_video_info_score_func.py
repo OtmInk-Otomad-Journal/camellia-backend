@@ -266,6 +266,10 @@ def retrieve_single_video_stat(video_aid: int, max_try_times=10, sleep_inteval=3
     #     stat = None
 
     assert isinstance(stat, dict)
+
+    stating = stat["stat"] # 由于获取的 get_info，stat 需要单独挤进去
+    stat.update(stating)
+
     return status, stat
 
 def apply_bilibili_api(task: Callable, video_aid: int, *, max_try_times=10, sleep_inteval=3.) -> Tuple[int, List[Dict]]:
