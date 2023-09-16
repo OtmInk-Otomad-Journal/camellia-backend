@@ -18,7 +18,7 @@ with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
         # PICK UP 获取
         for item in listed:
             time = item["提交时间（自动）"]
-            realtime = datetime.datetime.strptime(time,"%Y-%m-%d %H:%M:%S")
+            realtime = datetime.datetime.strptime(time,"%Y/%m/%d %H:%M:%S")
             if realtime < min_time:
                 continue
             aid = turnAid(str(item["推荐作品 av 号 / BV 号（必填）"]))
