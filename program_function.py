@@ -12,6 +12,9 @@ from config import *
 import numpy as np
 from haishoku.haishoku import Haishoku
 
+from get_video_info_score_func import apply_bilibili_api
+from bilibili_api import video
+
 def get_img(aid):
     video_data = requests.get(url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}").json()
     face = video_data["data"]["owner"]["face"]
@@ -46,7 +49,7 @@ def exactVideoLength(url):
     return tdur
 
 # 视频下载
-def get_video(aid,part = 1):
+def get_video(aid,part = 1,cid = None):
     d_time = 0
     command = ["./lux"]
     if part > 1:
@@ -68,11 +71,29 @@ def get_video(aid,part = 1):
     logging.info(f"av{aid} 视频下载完成")
     return f"./video/{aid}.mp4"
 
+# 弹幕下载
+def get_danmaku(cid,aid = None):
+    danmaku_content = requests.get(f"https://comment.bilibili.com/{cid}.xml")
+    try_times = 0
+    while(danmaku_content.status_code != 200 and try_times <= 10):
+        try_times += 1
+        danmaku_content = requests.get(f"https://comment.bilibili.com/{cid}.xml")
+    if(danmaku_content.status_code != 200):
+        danmaku_content = ""
+    else:
+        danmaku_content = danmaku_content.content
+    with open(f"./danmaku/{cid}.xml","wb") as danmaku:
+        danmaku.write(danmaku_content)
+    logging.info(f"av{aid} 弹幕获取完成")
+    return f"./danmaku/{cid}.xml"
+
 # 编码转换
 def any_to_avc(file):
     format = ffmpeg.probe(file)['streams'][0]['codec_name']
     if format not in ['h264','avc']:
-        rename = f"ori_{file}"
+        ori_name = file.split("/")
+        ori_name[-1] = "ori_" + ori_name[-1]
+        rename = "/".join(ori_name)
         os.rename(file,rename)
         video = ffmpeg.input(rename)
         ffmpeg.output(video,file,**render_format).run()
@@ -153,7 +174,7 @@ def check_dir():
     dirpaths = ["avatar","cover","data",
             "fast_view","log","option",
             "output","output/clip","output/final",
-            "video","cookies","temp","option/ads"]
+            "video","cookies","temp","option/ads","danmaku"]
     for dirpath in dirpaths:
         if not os.path.exists(dirpath):
             os.mkdir(dirpath)

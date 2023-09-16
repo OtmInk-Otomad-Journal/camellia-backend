@@ -2,7 +2,7 @@ import csv
 import logging
 from config import *
 from get_video_info_score import aid_to_score_norm, selected_video_stat, all_video_info
-from program_function import check_dir , get_img , get_video , calc_color , exactVideoLength , html_unescape
+from program_function import check_dir , get_img , get_video , calc_color , exactVideoLength , html_unescape , get_danmaku
 from danmuku_time import danmuku_time
 
 # 新建不存在的文件夹
@@ -29,7 +29,7 @@ co_header = ['ranking','score',
              'pubtime',
              'adjust_scale','prescore',
              'part','duration','start_time','full_time',
-             'web_prefix','video_src','cover_src','avatar_src',
+             'web_prefix','video_src','cover_src','avatar_src','danmaku_src',
              'light_color', 'dark_color', 'score_add']
 
 logging.info('生成 CSV 信息表格')
@@ -67,6 +67,7 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
             "video_src": '未取得',
             "avatar_src": '未取得',
             "cover_src": '未取得', #str(video_info["pic"]),
+            "danmaku_src": '未取得',
             "light_color": '未取得',
             "dark_color": '未取得',
             "score_add": ''
@@ -94,6 +95,7 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
                 })
             if ranking <= main_end + 5:
                 vid_src = get_video(vid["aid"])
+                danmaku_src = get_danmaku(vid["cid"],aid=vid["aid"]) # 弹幕获取
                 exact_time = exactVideoLength(vid_src)
                 full = False
                 if ranking == 1:

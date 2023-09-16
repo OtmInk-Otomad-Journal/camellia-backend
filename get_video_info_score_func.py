@@ -276,7 +276,7 @@ def apply_bilibili_api(task: Callable, video_aid: int, *, max_try_times=10, slee
     try_times = 0
     contents: List[Dict] = []
     while try_times < max_try_times:
-        try: 
+        try:
             contents = sync(task())
             break
         except (ServerDisconnectedError, ClientOSError):
