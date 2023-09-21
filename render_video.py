@@ -50,7 +50,7 @@ def render_video(data,url,audio = None):
             # opt.add_argument('--no-sandbox')
             # opt.add_argument('--ignore-certificate-errors')
             # opt.add_argument('--allow-running-insecure-content')
-            driver = webdriver.Edge(service=ChromeService(),options=opt)
+            driver = webdriver.Edge(service=ChromeService(executable_path="./driver/chromedriver.exe"),options=opt)
             driver.get(url)
             driver.set_window_size(screen_size[0],screen_size[1])
             time.sleep(2)

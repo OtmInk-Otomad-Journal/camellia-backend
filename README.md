@@ -15,7 +15,7 @@
 # 前置环境
 
 * 视频序列需要 FFmpeg 支持
-* 视频渲染需要 Chrome 浏览器支持
+* 视频渲染需要 Chrome 浏览器以及它的 Driver 支持。
 * 后端地址需进行 HTTP 转发，在 render_prefix 修改相应地址。
 * 前端模板需运行在 HTTP 环境中，在 web_prefix 修改相应地址。
 * 字体至少需要 **HarmonyOS Sans SC** 、**Montserrat**，工具字体可添加 **TH-Tshyn**。

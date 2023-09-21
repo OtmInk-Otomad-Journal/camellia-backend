@@ -12,9 +12,6 @@ from config import *
 import numpy as np
 from haishoku.haishoku import Haishoku
 
-from get_video_info_score_func import apply_bilibili_api
-from bilibili_api import video
-
 def get_img(aid):
     video_data = requests.get(url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}").json()
     face = video_data["data"]["owner"]["face"]
@@ -174,7 +171,7 @@ def check_dir():
     dirpaths = ["avatar","cover","data",
             "fast_view","log","option",
             "output","output/clip","output/final",
-            "video","cookies","temp","option/ads","danmaku"]
+            "video","cookies","temp","option/ads","danmaku","driver"]
     for dirpath in dirpaths:
         if not os.path.exists(dirpath):
             os.mkdir(dirpath)
@@ -190,6 +187,9 @@ def check_dir():
             header = ["name","uid","adjust_scale"]
             adjustInfo = csv.DictWriter(adjustfile,header)
             adjustInfo.writeheader()
+
+def check_env():
+    assert not os.path.exists("./driver/chromedriver.exe") , "./driver/ 缺失 chromedriver.exe 驱动程序"
 
 def html_unescape(dict):
     out_dict = {}

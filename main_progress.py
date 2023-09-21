@@ -4,7 +4,7 @@ import threading
 from webdriver_manager.chrome import ChromeDriverManager
 
 from all_create import AllVideo
-from program_function import convert_csv , extract_single_column
+from program_function import convert_csv , extract_single_column , check_env
 from render_video import render_video
 # 声明变量
 from config import *
@@ -14,9 +14,11 @@ logging.basicConfig(format='[%(levelname)s]\t%(message)s',filename="log/" + time
 formatter = logging.Formatter('[%(levelname)s]\t%(message)s')
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
-console_handler.setLevel('DEBUG')
+console_handler.setLevel('INFO')
 logger = logging.getLogger()
 logger.addHandler(console_handler)
+
+check_env()
 
 # 获取数据
 ranked_list = convert_csv("data/data.csv")
@@ -28,11 +30,6 @@ mainArr = extract_single_column(ranked_list,"aid",main_end)
 picked_list = []
 if os.path.exists(f"./data/picked.csv"):
     picked_list = convert_csv(f"./data/picked.csv")
-
-try:
-    ChromeDriverManager().install() # 尝试安装
-except:
-    pass
 
 # 主榜段落合成
 render_times = 0

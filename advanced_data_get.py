@@ -95,7 +95,7 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
                 })
             if ranking <= main_end + 5:
                 vid_src = get_video(vid["aid"])
-                danmaku_src = get_danmaku(vid["cid"],aid=vid["aid"]) # 弹幕获取
+                # danmaku_src = get_danmaku(vid["cid"],aid=vid["aid"]) # 弹幕获取
                 exact_time = exactVideoLength(vid_src)
                 full = False
                 if ranking == 1:
