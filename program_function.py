@@ -189,7 +189,7 @@ def check_dir():
             adjustInfo.writeheader()
 
 def check_env():
-    assert not os.path.exists("./driver/chromedriver.exe") , "./driver/ 缺失 chromedriver.exe 驱动程序"
+    assert os.path.exists("./driver/chromedriver.exe") , "./driver/ 缺失 chromedriver.exe 驱动程序"
 
 def html_unescape(dict):
     out_dict = {}
