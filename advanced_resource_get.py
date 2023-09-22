@@ -57,7 +57,7 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
                 "reason": reason,
                 "uploader": picked["owner"]["name"],
                 "copyright": picked["copyright"],
-                "pubtime": time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(int(picked["pubdate"]))),
+                "pubtime": time.strftime("%Y/%m/%d %H:%M:%S",time.localtime(int(picked["pubdate"]))),
                 "picker": picker,
                 'start_time': start_time,
                 'full_time': full_time,
