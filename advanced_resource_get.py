@@ -1,8 +1,6 @@
 import csv
-import asyncio
 import logging
-from bilibili_api import video
-from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape
+from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape , get_danmaku
 from danmuku_time import danmuku_time
 
 from get_video_info_score_func import retrieve_single_video_stat
@@ -31,7 +29,7 @@ for ranked in ranked_list:
 |aid={ranked["aid"]}'''+"\n}}\n")
 # Pick Up
 allArr = []
-pickHeader = ["aid","bvid",
+pickHeader = ["aid","bvid","cid",
               "title","reason","uploader",
               "part","copyright",
               "pubtime","picker",
@@ -47,12 +45,14 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
         picked = pickAllInfo[1]
         vid_src = get_video(picked["aid"])
         exact_time = exactVideoLength(vid_src)
-        start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time)
+        start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time,cid = picked["cid"])
+        danmaku_src = get_danmaku(picked["cid"],aid=picked["aid"]) # 弹幕获取
         pic_src = get_img(picked["aid"])
         color_rgb = calc_color(pic_src["cover"])
         oneArr = {
                 "aid": picked["aid"],
                 "bvid": picked["bvid"],
+                "cid": picked["cid"],
                 "title": picked["title"],
                 "reason": reason,
                 "uploader": picked["owner"]["name"],

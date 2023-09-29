@@ -17,7 +17,7 @@ base_path = "./AutoData/"       # 数据存储路径
 delta_days = 11                 # 以今天往前的第 delta_days 日开始统计
 range_days = 7                  # 统计 range_days 天的数据
 
-selected_day = ""       # 用于 Debug 或其它用途 , YYMMDD 230721
+selected_day = "230721"       # 用于 Debug 或其它用途 , YYMMDD 230721
 if selected_day != "":
     select = datetime.datetime.strptime(selected_day,"%y%m%d")
     delta_days = (datetime.datetime.now() - select).days + range_days - 1
@@ -60,18 +60,26 @@ main_to_side_offset = -1
 insert_count = 5 # 主榜中断个数
 
 render_format = {
-    "vcodec": "h264_qsv", # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
+    "vcodec": "h264_qsv",
     "video_bitrate" : "10000k",
     "audio_bitrate" : "320k"
 }
 all_render_format = {
-    "vcodec": "h264_qsv", # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
+    "vcodec": "h264_qsv",
     "video_bitrate" : "10000k",
     "audio_bitrate" : "320k",
     "r": "60"
 }
 read_format = {
     # "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
+}
+
+smooth_bit_rate = 5000000 # 5k码率保证渲染正常
+
+smooth_render_format = {
+    "vcodec": "h264_qsv",
+    "video_bitrate" : "4500k",
+    "audio_bitrate" : "320k"
 }
 muitl_limit = threading.Semaphore(3)
 render_max_threading_count = 1

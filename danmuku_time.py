@@ -1,10 +1,10 @@
 import logging
-import requests
-import math
+import numpy as np
 from config import *
-from lxml import html
+from lxml import etree
 
-def danmuku_time(aid,full_time,sep_time,full = False):
+def danmuku_time(aid,full_time,sep_time,full = False,cid = None):
+    # 全长度判断
     if full:
         if full_time < sep_time:
             return 0,full_time
@@ -13,8 +13,22 @@ def danmuku_time(aid,full_time,sep_time,full = False):
         else:
             high_index = full_time / 2
             if full_time - high_index > max_main_duration:
-                return full_time - max_main_duration , max_main_duration
-    high_index = full_time / 2
+                return high_index, max_main_duration
+
+    # 弹幕稀疏计算
+    high_danmuku_array = []
+    high_enerbar = etree.parse(f'./danmaku/{cid}.xml')
+    root = high_enerbar.getroot()
+    for element in root.iter():
+        if(element.tag == "d"):
+            dtime = float(element.attrib["p"].split(",")[0])
+            high_danmuku_array.append(dtime)
+    if(high_danmuku_array != []):
+        hist = np.histogram(high_danmuku_array,bins=int(np.ptp(high_danmuku_array) // 2),density=True)
+        high_index = hist[1][np.argmax(hist[0])]
+    else:
+        high_index = full_time / 2
+
     logging.info('获取 av' + str(aid) + ' 视频的起始时间为 ' + str(high_index) + " 秒")
     if full_time - high_index < sep_time:
         high_index = full_time - sep_time * 1.35

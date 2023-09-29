@@ -269,6 +269,8 @@ def retrieve_single_video_stat(video_aid: int, max_try_times=10, sleep_inteval=3
 
     stating = stat["stat"] # 由于获取的 get_info，stat 需要单独挤进去
     stat.update(stating)
+    ciding = stat["pages"][0] # 默认获取第一个视频的 cid
+    stat.update(ciding)
 
     return status, stat
 

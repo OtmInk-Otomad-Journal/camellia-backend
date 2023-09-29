@@ -84,10 +84,12 @@ def get_danmaku(cid,aid = None):
     logging.info(f"av{aid} 弹幕获取完成")
     return f"./danmaku/{cid}.xml"
 
-# 编码转换
+# 编码以及码率转换
 def any_to_avc(file):
-    format = ffmpeg.probe(file)['streams'][0]['codec_name']
-    if format not in ['h264','avc']:
+    info = ffmpeg.probe(file)['streams'][0]
+    format = info['codec_name']
+    bit_rate = info['bit_rate']
+    if (format not in ['h264','avc']) or (bit_rate > smooth_bit_rate):
         ori_name = file.split("/")
         ori_name[-1] = "ori_" + ori_name[-1]
         rename = "/".join(ori_name)

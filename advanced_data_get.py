@@ -5,6 +5,15 @@ from get_video_info_score import aid_to_score_norm, selected_video_stat, all_vid
 from program_function import check_dir , get_img , get_video , calc_color , exactVideoLength , html_unescape , get_danmaku
 from danmuku_time import danmuku_time
 
+# 日志记录
+logging.basicConfig(format='[%(levelname)s]\t%(message)s',filename="log/" + time.strftime("%Y-%m-%d %H-%M-%S") + '.log', level=logging.INFO)
+formatter = logging.Formatter('[%(levelname)s]\t%(message)s')
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+console_handler.setLevel('INFO')
+logger = logging.getLogger()
+logger.addHandler(console_handler)
+
 # 新建不存在的文件夹
 check_dir()
 
@@ -23,7 +32,7 @@ with open("option/adjust.csv",encoding="utf-8-sig",newline='') as adjustfile:
         adjust_dic[int(adj["uid"])] = adj["adjust_scale"]
 
 co_header = ['ranking','score',
-             'aid','bvid',
+             'aid','bvid','cid',
              'title','uploader','copyright',
              'play','like','coin','star',
              'pubtime',
@@ -50,6 +59,7 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
             "score": norm_score,
             "aid": str(video_aid),
             "bvid": str(video_info["bvid"]),
+            "cid": str(video_stat.get("cid","未取得")),
             "title": str(video_info["title"]),
             "uploader": str(video_info["author"]),
             "copyright": str(video_stat.get("copyright","未取得")),
@@ -95,12 +105,12 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
                 })
             if ranking <= main_end + 5:
                 vid_src = get_video(vid["aid"])
-                # danmaku_src = get_danmaku(vid["cid"],aid=vid["aid"]) # 弹幕获取
+                danmaku_src = get_danmaku(vid["cid"],aid=vid["aid"]) # 弹幕获取
                 exact_time = exactVideoLength(vid_src)
                 full = False
                 if ranking == 1:
                     full = True
-                start_time , full_time = danmuku_time(vid["aid"],exact_time,sep_time,full=full)
+                start_time , full_time = danmuku_time(vid["aid"],exact_time,sep_time,full=full,cid=vid["cid"])
                 after_dict.update({ "video_src" : vid_src,
                                     "duration" : full_time,
                                     "start_time": start_time,
