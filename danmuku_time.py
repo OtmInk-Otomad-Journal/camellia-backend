@@ -24,7 +24,10 @@ def danmuku_time(aid,full_time,sep_time,full = False,cid = None):
             dtime = float(element.attrib["p"].split(",")[0])
             high_danmuku_array.append(dtime)
     if(high_danmuku_array != []):
-        hist = np.histogram(high_danmuku_array,bins=int(np.ptp(high_danmuku_array) // 2),density=True)
+        split_num = np.ptp(high_danmuku_array) // 2
+        if split_num <= 0:
+            split_num = 1
+        hist = np.histogram(high_danmuku_array,bins=int(split_num),density=True)
         high_index = hist[1][np.argmax(hist[0])]
     else:
         high_index = full_time / 2
