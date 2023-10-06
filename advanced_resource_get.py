@@ -45,8 +45,8 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
         picked = pickAllInfo[1]
         vid_src = get_video(picked["aid"])
         exact_time = exactVideoLength(vid_src)
-        start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time,cid = picked["cid"])
         danmaku_src = get_danmaku(picked["cid"],aid=picked["aid"]) # 弹幕获取
+        start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time,cid = picked["cid"])
         pic_src = get_img(picked["aid"])
         color_rgb = calc_color(pic_src["cover"])
         oneArr = {
