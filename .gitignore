@@ -141,6 +141,7 @@ cover/
 template/
 temp/
 danmaku/
+driver/
 
 lux.exe
 AutoData/**

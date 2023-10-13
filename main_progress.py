@@ -1,7 +1,6 @@
 import logging
 import os
 import threading
-from webdriver_manager.chrome import ChromeDriverManager
 
 from all_create import AllVideo
 from program_function import convert_csv , extract_single_column , check_env

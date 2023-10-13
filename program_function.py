@@ -89,13 +89,13 @@ def any_to_avc(file):
     info = ffmpeg.probe(file)['streams'][0]
     format = info['codec_name']
     bit_rate = info['bit_rate']
-    if (format not in ['h264','avc']) or (bit_rate > smooth_bit_rate):
+    if (format not in ['h264','avc']) or (int(bit_rate) > smooth_bit_rate):
         ori_name = file.split("/")
         ori_name[-1] = "ori_" + ori_name[-1]
         rename = "/".join(ori_name)
         os.rename(file,rename)
         video = ffmpeg.input(rename)
-        ffmpeg.output(video,file,**render_format).run()
+        ffmpeg.output(video,file,**smooth_render_format).run()
 
 # CSV 表格转换
 def convert_csv(file):
