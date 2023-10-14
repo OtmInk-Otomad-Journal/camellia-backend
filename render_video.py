@@ -21,7 +21,7 @@ def render_video(data,url,audio = None):
     #     audio_file = data["audio_src"]
     # video_file = data["video_src"]
     output_file = data["output_src"]
-    audio_file = audio_process(data["aid"],float(start_time*1000),float(full_duration*1000))
+    audio_file = audio_process(data["aid"],float(start_time)*1000,float(full_duration)*1000)
     identify_code = hashlib.md5(str(data).encode()).hexdigest()
 
     logging.info(f"启动进程 {identify_code}")
