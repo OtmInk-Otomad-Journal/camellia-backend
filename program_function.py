@@ -211,11 +211,12 @@ def audio_process(aid,start_time = 0,duration = 10000):
 
     # 判断分组极差，判断压缩
     chunks = pydub.utils.make_chunks(sound[int(duration/4):int(duration*3/4)],100) # 排除首末可能存在的判断失误
+    clup = int((duration/4 - duration*3/4) // 100)
     dBFS_array = []
     for i, chunk in enumerate(chunks):
         dBFS_array.append(chunk.max_dBFS)
     dBFS_aver = np.average(dBFS_array)
-    if(abs(np.max(dBFS_array) - dBFS_aver) > 2.5 and np.std(dBFS_array) < 4): # 若偏差大于 2.5 且标准差小于 4，则压缩
+    if(abs(np.max(dBFS_array) - dBFS_aver) > 2.5 and np.std(dBFS_array) / clup < 0.04): # 若偏差大于 2.5 且单组标准差小于 0.04，则压缩
         sound = sound.apply_gain(-dBFS_aver)
         sound = pydub.effects.compress_dynamic_range(sound,threshold=0,ratio=4.0, attack=5.0, release=50.0)
 
