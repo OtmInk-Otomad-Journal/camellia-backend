@@ -8,6 +8,7 @@ import ffmpeg
 import json
 import hashlib
 from tqdm import tqdm
+from program_function import audio_process
 from config import *
 
 def pack_video(sv,sa,op,rf):
@@ -16,10 +17,11 @@ def pack_video(sv,sa,op,rf):
 def render_video(data,url,audio = None):
     start_time = data["start_time"]
     full_duration = data["full_time"]
-    if audio != None:
-        audio_file = data["audio_src"]
-    video_file = data["video_src"]
+    # if audio != None:
+    #     audio_file = data["audio_src"]
+    # video_file = data["video_src"]
     output_file = data["output_src"]
+    audio_file = audio_process(data["aid"],float(start_time*1000),float(full_duration*1000))
     identify_code = hashlib.md5(str(data).encode()).hexdigest()
 
     logging.info(f"启动进程 {identify_code}")
@@ -93,12 +95,12 @@ def render_video(data,url,audio = None):
     logging.info("视频序列合成完成")
 
     sequence_video = ffmpeg.input(f"temp/{identify_code}_%0{sequence_num_width}d.png",framerate=fps)
-    if audio != None:
-        sequence_audio = ffmpeg.input(audio_file,t=full_duration)
-    else:
-        sequence_audio = ffmpeg.input(video_file,ss=start_time,t=full_duration).audio
-        sequence_audio = sequence_audio.filter("afade",t="in",d=1)
-        sequence_audio = sequence_audio.filter("afade",t="out",st=float(full_duration)-1,d=1)
+    # if audio != None:
+    sequence_audio = ffmpeg.input(audio_file)
+    # else:
+    #     sequence_audio = ffmpeg.input(video_file,ss=start_time,t=full_duration).audio
+    #     sequence_audio = sequence_audio.filter("afade",t="in",d=1)
+    #     sequence_audio = sequence_audio.filter("afade",t="out",st=float(full_duration)-1,d=1)
     pack_video(sequence_video,sequence_audio,output_file,render_format)
 
     logging.info("视频渲染完成")

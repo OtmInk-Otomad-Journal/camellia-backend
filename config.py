@@ -73,7 +73,9 @@ all_render_format = {
 read_format = {
     # "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
 }
-
+audio_render_format = {
+    "audio_bitrate" : "320k"
+}
 smooth_bit_rate = 5000000 # 5k码率保证渲染正常
 
 smooth_render_format = {

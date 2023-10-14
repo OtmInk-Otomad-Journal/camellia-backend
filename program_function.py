@@ -6,6 +6,7 @@ import csv
 import ffmpeg
 import colorsys
 import html
+import pydub
 from io import BytesIO
 from PIL import Image
 from config import *
@@ -173,7 +174,7 @@ def check_dir():
     dirpaths = ["avatar","cover","data",
             "fast_view","log","option",
             "output","output/clip","output/final",
-            "video","cookies","temp","option/ads","danmaku","driver"]
+            "video","audio","cookies","temp","option/ads","danmaku","driver"]
     for dirpath in dirpaths:
         if not os.path.exists(dirpath):
             os.mkdir(dirpath)
@@ -198,3 +199,17 @@ def html_unescape(dict):
     for key,value in dict.items():
         out_dict.update({ key: html.unescape(str(value)) })
     return out_dict
+
+# 音频处理
+def audio_process(aid,start_time = 0,duration = 10000):
+    sound = pydub.AudioSegment.from_file(f"./video/{aid}.mp4")
+    silent_time = 500
+    silent = pydub.AudioSegment.silent(duration=silent_time)
+    sound = sound[start_time:start_time+duration] # 切片
+    sound = sound.apply_gain(-sound.max_dBFS) # 响度标准化
+    sound = silent.append(sound,crossfade = silent_time)
+    sound = sound.append(silent,crossfade = silent_time) # 交叉淡入
+    sound.export(f"./audio/{aid}.mp3",
+                format="mp3",
+                bitrate="320k")
+    return f"./audio/{aid}.mp3"

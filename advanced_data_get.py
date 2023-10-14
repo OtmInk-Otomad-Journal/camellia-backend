@@ -33,7 +33,7 @@ with open("option/adjust.csv",encoding="utf-8-sig",newline='') as adjustfile:
 
 co_header = ['ranking','score',
              'aid','bvid','cid',
-             'title','uploader','copyright',
+             'title','uploader',"uid",'copyright',
              'play','like','coin','star',
              'pubtime',
              'adjust_scale','prescore',
@@ -62,6 +62,7 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
             "cid": str(video_stat.get("cid","未取得")),
             "title": str(video_info["title"]),
             "uploader": str(video_info["author"]),
+            "uid": str(video_info["mid"]),
             "copyright": str(video_stat.get("copyright","未取得")),
             "play": str(video_info["play"]),
             "like": str(video_stat.get("like", "未取得")),
