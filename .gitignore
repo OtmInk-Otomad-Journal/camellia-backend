@@ -142,6 +142,7 @@ template/
 temp/
 danmaku/
 driver/
+audio/
 
 lux.exe
 AutoData/**
