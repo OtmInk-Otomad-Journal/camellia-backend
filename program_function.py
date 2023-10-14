@@ -210,7 +210,7 @@ def audio_process(aid,start_time = 0,duration = 10000):
     sound = sound.apply_gain(-sound.max_dBFS) # 响度标准化
 
     # 判断分组极差，判断压缩
-    chunks = pydub.utils.make_chunks(sound,100)
+    chunks = pydub.utils.make_chunks(sound[int(duration/4):int(duration*3/4)],100) # 排除首末可能存在的判断失误
     dBFS_array = []
     for i, chunk in enumerate(chunks):
         dBFS_array.append(chunk.max_dBFS)
