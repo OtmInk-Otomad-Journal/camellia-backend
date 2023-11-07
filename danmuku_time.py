@@ -11,9 +11,11 @@ def danmuku_time(aid,full_time,sep_time,full = False,cid = None):
         if full_time < max_main_duration:
             return 0,full_time
         else:
-            high_index = full_time / 2
+            high_index = full_time / 3
             if full_time - high_index > max_main_duration:
                 return high_index, max_main_duration
+            else:
+                return high_index, full_time - high_index
 
     # 弹幕稀疏计算
     high_danmuku_array = []
