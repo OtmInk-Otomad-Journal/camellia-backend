@@ -32,7 +32,7 @@ allArr = []
 pickHeader = ["aid","bvid","cid",
               "title","reason","uploader",
               "part","copyright",
-              "pubtime","picker",
+              "pubtime","picker",'activity',
               'start_time','full_time',
               'web_prefix','video_src','cover_src','avatar_src',
               'light_color', 'dark_color']
@@ -59,6 +59,7 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
                 "copyright": picked["copyright"],
                 "pubtime": time.strftime("%Y/%m/%d %H:%M:%S",time.localtime(int(picked["pubdate"]))),
                 "picker": picker,
+                'activity': picked["activity"],
                 'start_time': start_time,
                 'full_time': full_time,
                 'web_prefix': web_prefix,
