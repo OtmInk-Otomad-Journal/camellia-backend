@@ -10,6 +10,10 @@ else:
     with open("./time.txt","w") as f:
         f.write(usedTime)
 
+activity_list = {
+    "wc": "每周挑战特殊推荐"
+}
+
 ### 拉取数据相关 ###
 sleep_inteval = 1             # 各处重复调用 api 的间隔秒数
 
@@ -84,10 +88,15 @@ smooth_render_format = {
     "audio_bitrate" : "320k"
 }
 muitl_limit = threading.Semaphore(3)
-render_max_threading_count = 1
+
+render_max_threading_count = 1 # 正常渲染下最大线程数
 slip_second = 20
 
+render_fast_threading_count = 10 # 快速渲染下线程数
+
 sequence_num_width = 6 # 序列渲染编号最大位数
+
+
 
 web_prefix = "http://localhost:7213/" # 用于网页渲染的本地文件获取地址
 render_prefix = "http://localhost:7214" # 用于网页渲染的在线模板端

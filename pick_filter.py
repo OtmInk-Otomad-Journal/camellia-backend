@@ -4,6 +4,7 @@ import tkinter
 import datetime
 import os
 import shutil
+from config import activity_list
 from program_function import turnAid
 
 
@@ -27,8 +28,8 @@ with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
                 picker = "神秘人"
             url = f"https://www.bilibili.com/video/av{aid}"
 
-            if item["您的备注"] == "wc": # 每周挑战特别识别
-                act = "wc"
+            if item["您的备注"] in activity_list: # 活动特别识别
+                act = item["您的备注"]
             else:
                 act = ""
 
@@ -50,8 +51,8 @@ with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
             text_title = tkinter.Label(text=picker,font=("HarmonyOS Sans SC Bold",20),justify='left',pady=10)
             text_title.pack()
 
-            if act == "wc":
-                text_title_2 = tkinter.Label(text='每周挑战特殊推荐',font=("HarmonyOS Sans SC Bold",15),justify='left',pady=2)
+            if act != "":
+                text_title_2 = tkinter.Label(text=activity_list[act],font=("HarmonyOS Sans SC Bold",15),justify='left',pady=2)
                 text_title_2.pack()
 
             # 推荐理由显示
