@@ -14,18 +14,14 @@ from config import *
 def pack_video(sv,sa,op,rf):
     ffmpeg.output(sv,sa,op,**rf).run()
 
-def render_video(data,url,audio = None):
+def render_video(data,url,audio = None,fast = False):
     start_time = data["start_time"]
     full_duration = data["full_time"]
-    # if audio != None:
-    #     audio_file = data["audio_src"]
-    # video_file = data["video_src"]
     output_file = data["output_src"]
-    audio_file = audio_process(data["aid"],float(start_time)*1000,float(full_duration)*1000)
     identify_code = hashlib.md5(str(data).encode()).hexdigest()
+    audio_file = audio_process(data["aid"],float(start_time)*1000,float(full_duration)*1000,audio)
 
     logging.info(f"启动进程 {identify_code}")
-
     max_threading_count = render_max_threading_count
 
     all_frame = int(float(full_duration) * fps)
@@ -80,9 +76,12 @@ def render_video(data,url,audio = None):
                 render_progress.update(1)
 
         # 逐帧截图以获取序列
-        threading_count = int(float(full_duration) // slip_second) + 1
-        if threading_count >= max_threading_count:
-            threading_count = max_threading_count
+        if fast:
+            threading_count = render_fast_threading_count
+        else:
+            threading_count = int(float(full_duration) // slip_second) + 1
+            if threading_count >= max_threading_count:
+                threading_count = max_threading_count
         for frame_list in split_list_n_list(range(all_frame),threading_count):
             render_single = threading.Thread(target=render_frame,args=[frame_list])
             render_single.start()

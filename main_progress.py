@@ -3,7 +3,7 @@ import os
 import threading
 
 from all_create import AllVideo
-from program_function import convert_csv , extract_single_column , check_env
+from program_function import convert_csv , extract_single_column , check_env , check_dir
 from render_video import render_video
 # 声明变量
 from config import *
@@ -18,9 +18,23 @@ logger = logging.getLogger()
 logger.addHandler(console_handler)
 
 check_env()
+check_dir()
 
 # 获取数据
 ranked_list = convert_csv("data/data.csv")
+calendar_list = convert_csv("option/calendar.csv")
+
+# 日历合成
+if not os.path.exists(f"./output/clip/Calendar.mp4"):
+    calendar_data = {
+                "aid": "calendar",
+                "output_src": f"./output/clip/Calendar.mp4",
+                "full_time": 10,
+                "start_time": 0,
+                "more_data": calendar_list
+            }
+    url = f"{render_prefix}/calendar"
+    render_video(calendar_data,url,fast = True,audio = "./template/calendar/bgm.mp3")
 
 # 主榜列表单独提取
 mainArr = extract_single_column(ranked_list,"aid",main_end)

@@ -40,7 +40,7 @@ pickHeader = ["aid","bvid","cid",
 with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrites:
     writer = csv.DictWriter(csvWrites,pickHeader)
     writer.writeheader()
-    def getInfo(aid,reason,picker):
+    def getInfo(aid,reason,picker,act):
         pickAllInfo = retrieve_single_video_stat(video_aid=int(aid))
         picked = pickAllInfo[1]
         vid_src = get_video(picked["aid"])
@@ -59,7 +59,7 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
                 "copyright": picked["copyright"],
                 "pubtime": time.strftime("%Y/%m/%d %H:%M:%S",time.localtime(int(picked["pubdate"]))),
                 "picker": picker,
-                'activity': picked["activity"],
+                'activity': act,
                 'start_time': start_time,
                 'full_time': full_time,
                 'web_prefix': web_prefix,
@@ -78,9 +78,9 @@ with open(f"./data/picked.csv",'w',encoding="utf-8-sig", newline='') as csvWrite
             pickInfo = csv.DictReader(csvfile)
             for pick in pickInfo:
                 time.sleep(0.5)
-                if str(pick["aid"]) in mainArr: # 判断主榜是否已经存在 Pick Up 作品
+                if (str(pick["aid"]) in mainArr) and (pick["activity"] not in activity_list): # 判断主榜是否已经存在 Pick Up 作品，且非活动稿件。
                     continue
-                getInfo(pick["aid"],pick["reason"],pick["picker"])
+                getInfo(pick["aid"],pick["reason"],pick["picker"],pick["activity"])
 if len(allArr) == 0:
     os.remove(f"./data/picked.csv")
 

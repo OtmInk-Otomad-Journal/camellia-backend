@@ -49,6 +49,8 @@ def outVideo(file):
     return [viw,aud]
 
 def AllVideo(main_end,pickArr):
+    if not os.path.exists(filePath):
+        os.mkdir(filePath)
     with open("./data/data.csv", "r", encoding="utf-8-sig") as csvfile:
         reader = csv.reader(csvfile)
         main_rank_column = [row[0] for row in reader]
@@ -58,12 +60,11 @@ def AllVideo(main_end,pickArr):
         for ads in files:
             AllArr.append(inoutVideo(f"./option/ads/{ads}"))
             trueFiles.append(ads)
-    if len(trueFiles) > 0:
-        AllArr.append(inVideo("./template/opening/opening.mp4"))
-    else:
-        AllArr.append(ffVideo("./template/opening/opening.mp4"))
-    if not os.path.exists(filePath):
-        os.mkdir(filePath)
+
+    AllArr.append(inoutVideo("./output/clip/Calendar.mp4"))
+
+    AllArr.append(ffVideo("./template/opening/opening.mp4"))
+
     AllArr.append(inVideo("./template/pass/passMain.mp4"))
 
     for clips in range(main_end,insert_count+1,-1):

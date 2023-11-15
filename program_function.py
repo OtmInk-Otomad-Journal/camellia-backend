@@ -190,6 +190,12 @@ def check_dir():
             header = ["name","uid","adjust_scale"]
             adjustInfo = csv.DictWriter(adjustfile,header)
             adjustInfo.writeheader()
+    if not os.path.exists("./option/calendar.csv"):
+        # 日历
+        with open("option/calendar.csv","w",encoding="utf-8-sig",newline='') as adjustfile:
+            header = ["color","progress","date","title","subtitle","web_prefix","cover"]
+            adjustInfo = csv.DictWriter(adjustfile,header)
+            adjustInfo.writeheader()
 
 def check_env():
     assert os.path.exists("./driver/chromedriver.exe") , "./driver/ 缺失 chromedriver.exe 驱动程序"
@@ -201,8 +207,11 @@ def html_unescape(dict):
     return out_dict
 
 # 音频处理
-def audio_process(aid,start_time = 0,duration = 10000):
-    sound = pydub.AudioSegment.from_file(f"./video/{aid}.mp4")
+def audio_process(aid,start_time = 0,duration = 10000,audio = None):
+    if(audio != None):
+        sound = pydub.AudioSegment.from_file(audio)
+    else:
+        sound = pydub.AudioSegment.from_file(f"./video/{aid}.mp4")
     silent_time = 500
     silent = pydub.AudioSegment.silent(duration=silent_time)
     sound = sound[start_time:start_time+duration] # 切片
