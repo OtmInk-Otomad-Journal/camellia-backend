@@ -31,6 +31,7 @@ if not os.path.exists(f"./output/clip/Calendar.mp4"):
                 "output_src": f"./output/clip/Calendar.mp4",
                 "full_time": 10,
                 "start_time": 0,
+                "web_prefix": web_prefix,
                 "more_data": calendar_list
             }
     url = f"{render_prefix}/calendar"

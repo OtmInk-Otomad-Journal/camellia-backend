@@ -193,7 +193,7 @@ def check_dir():
     if not os.path.exists("./option/calendar.csv"):
         # 日历
         with open("option/calendar.csv","w",encoding="utf-8-sig",newline='') as adjustfile:
-            header = ["color","progress","date","title","subtitle","web_prefix","cover"]
+            header = ["color","progress","date","title","subtitle","cover"]
             adjustInfo = csv.DictWriter(adjustfile,header)
             adjustInfo.writeheader()
 
