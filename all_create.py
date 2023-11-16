@@ -121,6 +121,7 @@ def AllVideo(main_end,pickArr):
         shutil.move(f"./output/clip/MainRank_{rank_src}.mp4",f"{filePath}/MainRank_{rank_src}.mp4")
     for clipsto in range(1,len(pickArr)+1):
         shutil.move(f"./output/clip/PickRank_{clipsto}.mp4",f"{filePath}/PickRank_{clipsto}.mp4")
+    shutil.move("./output/clip/Calendar.mp4",f"{filePath}/Calendar.mp4")
     for curDir, dirs, files in os.walk(f"{tempPath}"):
         for temp_f in files:
             os.remove(f"{tempPath}/{temp_f}")
