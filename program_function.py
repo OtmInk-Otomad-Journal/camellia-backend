@@ -14,17 +14,17 @@ import numpy as np
 from haishoku.haishoku import Haishoku
 
 def get_img(aid):
-    video_data = requests.get(url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}").json()
+    video_data = requests.get(url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}",headers=api_header).json()
     face = video_data["data"]["owner"]["face"]
     cover = video_data["data"]["pic"]
     # 头像
     if not os.path.exists(f"./avatar/{aid}.png"):
-        img_content = requests.get(url=face).content
+        img_content = requests.get(url=face,headers=api_header).content
         img = Image.open(BytesIO(img_content))
         img.save(f"./avatar/{aid}.png")
     # 封面
     if not os.path.exists(f"cover/{aid}.png"):
-        img_content = requests.get(url=cover).content
+        img_content = requests.get(url=cover,headers=api_header).content
         img = Image.open(BytesIO(img_content))
         img.save(f"./cover/{aid}.png")
     callback = {
@@ -38,7 +38,7 @@ def turnAid(id):
         return id[2:]
     elif ("BV" in id):
         site = "https://api.bilibili.com/x/web-interface/view?bvid=" + id
-        lst = codecs.decode(requests.get(site).content, "utf-8").split("\"")
+        lst = codecs.decode(requests.get(site,headers=api_header).content, "utf-8").split("\"")
         return str(lst[16][1:-1])
 
 # 视频长度获取
@@ -71,11 +71,11 @@ def get_video(aid,part = 1,cid = None):
 
 # 弹幕下载
 def get_danmaku(cid,aid = None):
-    danmaku_content = requests.get(f"https://comment.bilibili.com/{cid}.xml")
+    danmaku_content = requests.get(f"https://comment.bilibili.com/{cid}.xml",headers=api_header)
     try_times = 0
     while(danmaku_content.status_code != 200 and try_times <= 10):
         try_times += 1
-        danmaku_content = requests.get(f"https://comment.bilibili.com/{cid}.xml")
+        danmaku_content = requests.get(f"https://comment.bilibili.com/{cid}.xml",headers=api_header)
     if(danmaku_content.status_code != 200):
         danmaku_content = ""
     else:

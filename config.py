@@ -15,6 +15,14 @@ activity_list = {
 }
 
 ### 拉取数据相关 ###
+api_header = {
+        'Accept': '*/*',
+        # 'Cookie': raw_cookie,
+        'Referer': 'https://www.bilibili.com/v/kichiku/mad/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/61.0.3163.79 Safari/537.36 Maxthon/5.0'
+    }
+
 sleep_inteval = 1             # 各处重复调用 api 的间隔秒数
 
 base_path = "./AutoData/"       # 数据存储路径
