@@ -1,6 +1,7 @@
 import WebVideoCreator, { VIDEO_ENCODER, logger } from "web-video-creator";
 
-function render_video(data){
+function render_video(data_src){
+    const data = JSON.parse(data_src);
     const wvc = new WebVideoCreator();
 
     wvc.config({

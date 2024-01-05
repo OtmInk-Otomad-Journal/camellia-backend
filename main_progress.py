@@ -4,7 +4,7 @@ import threading
 
 from all_create import AllVideo
 from program_function import convert_csv , extract_single_column , check_env , check_dir
-from render_video import render_video
+from render_video_wvc import render_video
 # 声明变量
 from config import *
 
@@ -72,7 +72,7 @@ for viding in ranked_list:
         continue
     # 否则正常渲染。
     url = f"{render_prefix}/main"
-    viding.update({ "output_src": f"./output/clip/MainRank_{render_times}.mp4" 
+    viding.update({ "output_src": f"./output/clip/MainRank_{render_times}.mp4", 
                     "url": url})
     muitl_limit.acquire()
     rend_s = threading.Thread(target=render_video,args=(viding,url))
