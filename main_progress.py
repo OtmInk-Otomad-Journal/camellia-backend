@@ -26,15 +26,16 @@ calendar_list = convert_csv("option/calendar.csv")
 
 # 日历合成
 if not os.path.exists(f"./output/clip/Calendar.mp4"):
+    url = f"{render_prefix}/calendar"
     calendar_data = {
                 "aid": "calendar",
                 "output_src": f"./output/clip/Calendar.mp4",
                 "full_time": 10,
                 "start_time": 0,
                 "web_prefix": web_prefix,
-                "more_data": calendar_list
+                "more_data": calendar_list,
+                "url": url
             }
-    url = f"{render_prefix}/calendar"
     render_video(calendar_data,url,fast = True,audio = "./template/calendar/bgm.mp3")
 
 # 主榜列表单独提取
@@ -60,7 +61,8 @@ for viding in ranked_list:
         viding.update({
             "output_src": f"./output/clip/MainRank_1.mp4",
             "side_duration": int(float(viding["full_time"]) * 0.6),
-            "more_data": ranked_list[main_end:main_end+side_end]
+            "more_data": ranked_list[main_end:main_end+side_end],
+            "url": url
         })
         muitl_limit.acquire()
         rend_s = threading.Thread(target=render_video,args=(viding,url))
@@ -70,7 +72,8 @@ for viding in ranked_list:
         continue
     # 否则正常渲染。
     url = f"{render_prefix}/main"
-    viding.update({ "output_src": f"./output/clip/MainRank_{render_times}.mp4" })
+    viding.update({ "output_src": f"./output/clip/MainRank_{render_times}.mp4" 
+                    "url": url})
     muitl_limit.acquire()
     rend_s = threading.Thread(target=render_video,args=(viding,url))
     rend_s.start()
@@ -81,10 +84,11 @@ for viding in ranked_list:
 picks = 0
 for picking in picked_list:
     picks += 1
+    url = f"{render_prefix}/pick"
     if os.path.exists(f"./output/clip/PickRank_{picks}.mp4"):
         continue
-    picking.update({ "output_src": f"./output/clip/PickRank_{picks}.mp4" })
-    url = f"{render_prefix}/pick"
+    picking.update({ "output_src": f"./output/clip/PickRank_{picks}.mp4" , 
+                    "url": url})
     muitl_limit.acquire()
     rend_s = threading.Thread(target=render_video,args=(picking,url))
     rend_s.start()
