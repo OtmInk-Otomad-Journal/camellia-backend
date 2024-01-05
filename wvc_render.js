@@ -1,7 +1,7 @@
 import WebVideoCreator, { VIDEO_ENCODER, logger } from "web-video-creator";
 
-
-const data = process.argv.splice(2)[0]
+const src = process.argv.splice(2)[0]
+const data = require(src)
 
 wvc.config({
     mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
