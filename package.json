@@ -1,0 +1,15 @@
+{
+  "name": "camellia-backend",
+  "version": "1.0.0",
+  "description": "本项目是目前正在 B 站上持续发布的音之墨音MAD排行榜的自动化合成脚本，主要使用 Python 语言编写。\r 目前是 Camellia 更新计划。",
+  "main": "wvc_render.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "web-video-creator": "^0.0.33"
+  }
+}
