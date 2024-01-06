@@ -88,14 +88,16 @@ read_format = {
 audio_render_format = {
     "audio_bitrate" : "320k"
 }
-smooth_bit_rate = 5000000 # 5k码率保证渲染正常
+# smooth_bit_rate = 5000000 # 5k码率保证渲染正常
+
+smooth_bit_rate = float("inf") # 无限码率
 
 smooth_render_format = {
     "vcodec": "h264_qsv",
-    "video_bitrate" : "4500k",
+    # "video_bitrate" : "4500k",
     "audio_bitrate" : "320k"
 }
-muitl_limit = threading.Semaphore(3)
+muitl_limit = threading.Semaphore(5)
 
 render_max_threading_count = 1 # 正常渲染下最大线程数
 slip_second = 20
