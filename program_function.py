@@ -238,8 +238,8 @@ def audio_process(aid,start_time = 0,duration = 10000,audio = None):
 
 # 裁剪视频
 def video_cut(aid,start_time = 0,duration = 10):
-    copy_format = { "vcodec": "copy" , "acodec": "copy" }
-    vid = ffmpeg.input(f"./video/{aid}.mp4",ss=start_time,t=duration)
+    # 因为时长有波动，必须使用原生 ffmpeg。
+    command = ['ffmpeg','-i',f"./video/{aid}.mp4",'-ss',start_time,'-t',duration,"-c:v","copy",f"./videoc/{aid}.mp4"]
     if not os.path.exists(f"./videoc/{aid}.mp4"):
-        ffmpeg.output(vid,f"./videoc/{aid}.mp4",**copy_format).run()
+        subprocess.Popen(command).wait()
     return f"./videoc/{aid}.mp4"
