@@ -48,4 +48,4 @@ video.once("completed", result => {
 });
 
 // 启动合成
-video.startAndWait().then(process.exit(););
+video.startAndWait().then(()=>{process.exit();});
