@@ -7,9 +7,6 @@ const data = require(src[0])
 
 const wvc = new WebVideoCreator();
 
-// 清理缓存
-wvc.cleanPreprocessCache();
-
 wvc.config({
     mp4Encoder: VIDEO_ENCODER.INTEL.H264
 });
