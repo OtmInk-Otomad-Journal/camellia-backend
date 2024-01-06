@@ -217,7 +217,7 @@ def audio_process(aid,start_time = 0,duration = 10000,audio = None):
         sound = pydub.AudioSegment.from_file(f"./video/{aid}.wav")
     silent_time = 500
     silent = pydub.AudioSegment.silent(duration=silent_time)
-    sound = sound[start_time:start_time+duration] # 切片
+    sound = sound[int(start_time):int(start_time+duration)] # 切片
 
     sound = sound.apply_gain(-sound.max_dBFS) # 响度标准化
 
