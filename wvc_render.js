@@ -13,7 +13,7 @@ wvc.config({
 
 // 创建单幕视频
 const video = wvc.createSingleVideo({
-    url: data.url + "?" + ,
+    url: data.url,
     width: 1920,
     height: 1080,
     fps: 60,
@@ -25,7 +25,7 @@ const video = wvc.createSingleVideo({
     showProgress: true,
     pagePrepareFn: async page => {
         const _page = page.target;
-        await _page.evacuate(function(){
+        await _page.evaluate(function(){
             inject_wvc(data);
         })
     }
