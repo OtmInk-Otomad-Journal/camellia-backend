@@ -42,7 +42,8 @@ video.addAudio({
 
 // 监听合成完成事件
 video.once("completed", result => {
-    logger.success(`渲染完成！\n视频时长: ${Math.floor(result.duration / 1000)}s\n耗费: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
+    logger.success(`渲染完成！\n视频时长: ${Math.floor(result.duration / 1000)}s\n耗费: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`);
+    process.exit();
 });
 
 // 启动合成
