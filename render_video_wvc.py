@@ -11,7 +11,7 @@ def render_video(data,url,audio = None,fast = False):
     data.update({ "audio_src": audio_file })
 
     identify_code = hashlib.md5(str(data).encode()).hexdigest()
-    json_name = f"temp/{identify_code}.json"
+    json_name = f"./temp/{identify_code}.json"
     with open(json_name,"w",encoding="utf-8-sig") as temp_json:
         json.dump(data,temp_json)
     command = ["node","wvc_render.js",json_name]
