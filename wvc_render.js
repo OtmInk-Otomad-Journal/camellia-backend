@@ -19,6 +19,9 @@ const video = wvc.createSingleVideo({
     fps: 60,
     duration: data.full_time * 1000,
     outputPath: data.output_src,
+    // 码率
+    audioBitrate: "320k",
+    videoBitrate: "8192k",
     // GPU 加速
     browserUseGPU: true,
     // Cli 的进度条
