@@ -211,10 +211,10 @@ def audio_process(aid,start_time = 0,duration = 10000,audio = None):
     if(audio != None):
         sound = pydub.AudioSegment.from_file(audio)
     else:
-        command = ['ffmpeg','-i',f"./video/{aid}.mp4","-c:a","copy",f"./video/{aid}.mp3"]
-        if not os.path.exists(f"./video/{aid}.mp3"):
+        command = ['ffmpeg','-i',f"./video/{aid}.mp4",f"./video/{aid}.wav"]
+        if not os.path.exists(f"./video/{aid}.wav"):
             subprocess.Popen(command).wait()
-        sound = pydub.AudioSegment.from_file(f"./video/{aid}.mp3")
+        sound = pydub.AudioSegment.from_file(f"./video/{aid}.wav")
     silent_time = 500
     silent = pydub.AudioSegment.silent(duration=silent_time)
     sound = sound[start_time:start_time+duration] # 切片
