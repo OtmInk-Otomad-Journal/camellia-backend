@@ -45,8 +45,7 @@ video.addAudio({
 // 监听合成完成事件
 video.once("completed", result => {
     logger.success(`渲染完成！\n耗费: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`);
-    process.exit();
 });
 
 // 启动合成
-video.start();
+video.startAndWait().then(process.exit(););
