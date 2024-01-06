@@ -5,7 +5,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 from all_create import AllVideo
 from program_function import convert_csv , extract_single_column , check_env
-from render_video import render_video
+from render_video_wvc import render_video
 # 声明变量
 from config import *
 

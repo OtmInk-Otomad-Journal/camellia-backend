@@ -174,7 +174,7 @@ def check_dir():
     dirpaths = ["avatar","cover","data",
             "fast_view","log","option",
             "output","output/clip","output/final",
-            "video","audio","cookies","temp","option/ads","danmaku","driver"]
+            "video","videoc","audio","cookies","temp","option/ads","danmaku","driver"]
     for dirpath in dirpaths:
         if not os.path.exists(dirpath):
             os.mkdir(dirpath)
@@ -235,3 +235,11 @@ def audio_process(aid,start_time = 0,duration = 10000,audio = None):
                 format="mp3",
                 bitrate="320k")
     return f"./audio/{aid}.mp3"
+
+# 裁剪视频
+def video_cut(aid,start_time = 0,duration = 10):
+    copy_format = { "vcodec": "copy" , "acodec": "copy" }
+    vid = ffmpeg.input(f"./video/{aid}.mp4",ss=start_time,t=duration)
+    if not os.path.exists(f"./videoc/{aid}.mp4"):
+        ffmpeg.output(vid,f"./videoc/{aid}.mp4",**copy_format).run()
+    return f"./videoc/{aid}.mp4"
