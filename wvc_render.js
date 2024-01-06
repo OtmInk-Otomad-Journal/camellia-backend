@@ -31,6 +31,12 @@ const video = wvc.createSingleVideo({
     }
 });
 
+video.addAudio({
+    path: data.audio_src,
+    loop: false,
+    volume: 100
+});
+
 // 监听合成完成事件
 video.once("completed", result => {
     logger.success(`渲染完成！\n视频时长: ${Math.floor(result.duration / 1000)}s\n耗费: ${Math.floor(result.takes / 1000)}s\nRTF: ${result.rtf}`)
