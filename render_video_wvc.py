@@ -10,9 +10,12 @@ def render_video(data,url,audio = None,fast = False):
     full_duration = data["full_time"]
     logging.info("正在处理音频...")
     audio_file = audio_process(data["aid"],float(start_time)*1000,float(full_duration)*1000,audio)
-    logging.info("正在裁剪视频...")
-    video_file = video_cut(data["aid"],float(start_time),float(full_duration))
-    data.update({ "audio_src": audio_file , "video_src": video_file})
+    if not fast:
+        logging.info("正在裁剪视频...")
+        video_file = video_cut(data["aid"],float(start_time),float(full_duration))
+    else:
+        video_file = ""
+    data.update({ "audio_src": audio_file , "video_src": video_file })
 
     identify_code = hashlib.md5(str(data).encode()).hexdigest()
     json_name = f"./temp/{identify_code}.json"
