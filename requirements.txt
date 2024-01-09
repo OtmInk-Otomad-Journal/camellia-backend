@@ -9,3 +9,4 @@ selenium
 tqdm
 webdriver_manager
 pydub
+yt-dlp

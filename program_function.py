@@ -13,6 +13,8 @@ from config import *
 import numpy as np
 from haishoku.haishoku import Haishoku
 
+import yt_dlp
+
 def get_img(aid):
     video_data = requests.get(url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}",headers=api_header).json()
     face = video_data["data"]["owner"]["face"]
@@ -62,8 +64,14 @@ def get_video(aid,part = 1,cid = None):
         return f"./video/{aid}.mp4"
     while(not os.path.exists(f"./video/{aid}.mp4")):
         d_time += 1
-        logging.info(f"第 {d_time} 次下载 av{aid} 视频...")
-        subprocess.Popen(command + ["-o","./video","-O",str(aid),f"av{aid}{p_src}"]).wait()
+        if d_time <= 5:
+            logging.info(f"第 {d_time} 次下载 av{aid} 视频...")
+            subprocess.Popen(command + ["-o","./video","-O",str(aid),f"av{aid}{p_src}"]).wait()
+        # 备用 yt-dlp
+        if d_time > 5:
+            yt_opt = { "outtmpl": f"./video/{aid}.%(ext)s"}
+            with yt_dlp.YoutubeDL(yt_opt) as ydl:
+                ydl.download([f"https://www.bilibili.com/video/av{aid}"])    
     if d_time != 0:
         any_to_avc(f"./video/{aid}.mp4")
     logging.info(f"av{aid} 视频下载完成")
