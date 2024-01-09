@@ -59,7 +59,7 @@ with open(f"./data/viewpicked.csv",'w',encoding="utf-8-sig", newline='') as csvW
             time.sleep(0.5)
             picks += 1
             getInfo(pick["aid"],pick["score"])
-            logging.info(f"进度 / {len(allArr)}")
+            logging.info(f"进度 {picks} / {len(allArr)}")
 
 # PICK UP 快速导航
 picks = 0
