@@ -33,7 +33,7 @@ for viding in ranked_list:
 
     # 正常渲染。
     url = f"{render_prefix}/viewpick"
-    viding.update({ "output_src": f"./output/clip/ViewRank_{render_times}.mp4" })
+    viding.update({ "output_src": f"./output/clip/ViewRank_{render_times}.mp4" , "url": url })
     muitl_limit.acquire()
     rend_s = threading.Thread(target=render_video,args=(viding,url))
     rend_s.start()

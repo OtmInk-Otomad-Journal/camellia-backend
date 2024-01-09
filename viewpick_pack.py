@@ -50,27 +50,17 @@ def outVideo(file):
     return [viw,aud]
 
 def AllVideo(main_end):
-    with open("./data/viewpicked.csv", "r", encoding="utf-8-sig") as csvfile:
-        reader = csv.reader(csvfile)
-        main_rank_column = [row[0] for row in reader]
     AllArr = []
-    trueFiles = []
-    for curDir, dirs, files in os.walk("./option/ads"):
-        for ads in files:
-            AllArr.append(inoutVideo(f"./option/ads/{ads}"))
-            trueFiles.append(ads)
-    if len(trueFiles) > 0:
-        AllArr.append(inVideo("./template/opening/ViewOpening.mp4"))
-    else:
-        AllArr.append(ffVideo("./template/opening/ViewOpening.mp4"))
+    AllArr.append(ffVideo("./template/opening/ViewOpening.mp4"))
     if not os.path.exists(filePath):
         os.mkdir(filePath)
-    AllArr.append(inVideo("./template/pass/passMain.mp4"))
+    # AllArr.append(inVideo("./template/pass/passMain.mp4"))
 
     for clips in range(main_end,1,-1):
         AllArr.append(ffVideo(f"./output/clip/ViewRank_{clips}.mp4"))
         AllArr.append(ffVideo("./template/pass/pass.mp4"))
     AllArr.append(ffVideo(f"./output/clip/ViewRank_1.mp4"))
+    AllArr.append(ffVideo(f"./template/opening/ViewEnding.mp4"))
 
     onum = 0
     for items in AllArr:
@@ -81,7 +71,6 @@ def AllVideo(main_end):
         combVideo = ffmpeg.concat(combVideo[0],combVideo[1],items[0],items[1],v=1,a=1).node
     ffmpeg.output(combVideo[0],combVideo[1],f'./output/final/ViewPick_{usedTime}.mp4',**all_render_format).run()
     for clips in range(main_end,0,-1):
-        rank_src = main_rank_column[clips]
         shutil.move(f"./output/clip/ViewRank_{clips}.mp4",f"{filePath}/ViewRank_{clips}.mp4")
     for curDir, dirs, files in os.walk(f"{tempPath}"):
         for temp_f in files:
