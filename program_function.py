@@ -103,7 +103,6 @@ def convert_csv(file):
     outlist = []
     with open(file,"r",encoding="utf-8-sig") as datafile:
         lists = csv.DictReader(datafile)
-        ok = 0
         for sti in lists:
             outlist.append(sti)
     return outlist

@@ -1,6 +1,6 @@
 import csv
 import logging
-from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape , get_danmaku
+from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape , get_danmaku , convert_csv
 from danmuku_time import danmuku_time
 
 from get_video_info_score_func import retrieve_single_video_stat
@@ -52,14 +52,13 @@ with open(f"./data/viewpicked.csv",'w',encoding="utf-8-sig", newline='') as csvW
         writer.writerow(oneArr)
         logging.info("一个 观众选 作品已记录")
 
-    with open("./data/viewpick.csv",encoding="utf-8-sig",newline='') as csvfile:
-        pickInfo = csv.DictReader(csvfile)
-        picks = 0
-        for pick in pickInfo:
-            time.sleep(0.5)
-            picks += 1
-            getInfo(pick["aid"],pick["score"])
-            logging.info(f"进度 {picks} / {len(pickInfo)}")
+    pickInfo = convert_csv("./data/viewpick.csv")
+    picks = 0
+    for pick in pickInfo:
+        time.sleep(0.5)
+        picks += 1
+        getInfo(pick["aid"],pick["score"])
+        logging.info(f"进度 {picks} / {len(pickInfo)}")
 
 # PICK UP 快速导航
 picks = 0
