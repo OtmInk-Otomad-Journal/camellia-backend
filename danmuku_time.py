@@ -44,7 +44,10 @@ def danmuku_time(aid,full_time,sep_time,full = False,cid = None):
     if full_time / 2 < sep_time:
         high_index = 0
         logging.info('获取 av' + str(aid) + ' 视频的起始时间为 0')
-        end_index = full_time
+        if full_time < sep_time:
+            end_index = full_time
+        else:
+            end_index = sep_time
     else:
         end_index = sep_time
     logging.info('最终获取 av' + str(aid) + ' 视频的起始时间为 ' + str(high_index) + " 秒")
