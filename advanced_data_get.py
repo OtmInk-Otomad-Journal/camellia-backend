@@ -113,7 +113,7 @@ with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
                     full = True
                 start_time , full_time = danmuku_time(vid["aid"],exact_time,sep_time,full=full,cid=vid["cid"])
                 after_dict.update({ "video_src" : vid_src,
-                                    "duration" : full_time,
+                                    "duration" : exact_time,
                                     "start_time": start_time,
                                     "full_time" : full_time})
         vid.update(after_dict)

@@ -12,7 +12,7 @@ pickHeader = ["score","aid","bvid",
               "title","uploader",
               "part","copyright",
               "pubtime",
-              'start_time','full_time',
+              'start_time','full_time','duration',
               'web_prefix','video_src','cover_src','avatar_src',
               'light_color', 'dark_color']
 
@@ -25,7 +25,7 @@ with open(f"./data/viewpicked.csv",'w',encoding="utf-8-sig", newline='') as csvW
         picked = pickAllInfo[1]
         vid_src = get_video(picked["aid"])
         exact_time = exactVideoLength(vid_src)
-        start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time)
+        start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time,cid=picked["cid"])
         pic_src = get_img(picked["aid"])
         color_rgb = calc_color(pic_src["cover"])
         oneArr = {
@@ -38,6 +38,7 @@ with open(f"./data/viewpicked.csv",'w',encoding="utf-8-sig", newline='') as csvW
                 "pubtime": time.strftime("%Y/%m/%d %H:%M:%S",time.localtime(int(picked["pubdate"]))),
                 'start_time': start_time,
                 'full_time': full_time,
+                'duration': exact_time,
                 'web_prefix': web_prefix,
                 'video_src': vid_src,
                 'cover_src': pic_src["cover"],
