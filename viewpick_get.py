@@ -54,9 +54,12 @@ with open(f"./data/viewpicked.csv",'w',encoding="utf-8-sig", newline='') as csvW
 
     with open("./data/viewpick.csv",encoding="utf-8-sig",newline='') as csvfile:
         pickInfo = csv.DictReader(csvfile)
+        picks = 0
         for pick in pickInfo:
             time.sleep(0.5)
+            picks += 1
             getInfo(pick["aid"],pick["score"])
+            logging.info(f"进度 / {len(allArr)}")
 
 # PICK UP 快速导航
 picks = 0
