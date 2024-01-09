@@ -1,6 +1,6 @@
 import csv
 import logging
-from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape
+from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape , get_danmaku
 from danmuku_time import danmuku_time
 
 from get_video_info_score_func import retrieve_single_video_stat
@@ -24,6 +24,7 @@ with open(f"./data/viewpicked.csv",'w',encoding="utf-8-sig", newline='') as csvW
         pickAllInfo = retrieve_single_video_stat(video_aid=int(aid))
         picked = pickAllInfo[1]
         vid_src = get_video(picked["aid"])
+        danmaku_src = get_danmaku(picked["cid"],aid=picked["aid"]) # 弹幕获取
         exact_time = exactVideoLength(vid_src)
         start_time , full_time = danmuku_time(picked["aid"],exact_time,sep_time,cid=picked["cid"])
         pic_src = get_img(picked["aid"])
