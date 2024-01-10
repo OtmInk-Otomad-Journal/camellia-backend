@@ -71,13 +71,15 @@ main_to_side_offset = -1
 
 insert_count = 5 # 主榜中断个数
 
+vcodec = "h264_qsv"
+
 render_format = {
-    "vcodec": "h264_qsv",
+    "vcodec": vcodec,
     "video_bitrate" : "10000k",
     "audio_bitrate" : "320k"
 }
 all_render_format = {
-    "vcodec": "h264_qsv",
+    "vcodec": vcodec,
     "video_bitrate" : "10000k",
     "audio_bitrate" : "320k",
     "r": "60"
@@ -93,7 +95,7 @@ audio_render_format = {
 smooth_bit_rate = float("inf") # 无限码率
 
 smooth_render_format = {
-    "vcodec": "h264_qsv",
+    "vcodec": vcodec,
     # "video_bitrate" : "4500k",
     "audio_bitrate" : "320k"
 }

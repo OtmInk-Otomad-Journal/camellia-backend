@@ -246,7 +246,7 @@ def audio_process(aid,start_time = 0,duration = 10000,audio = None):
 # 裁剪视频
 def video_cut(aid,start_time = 0,duration = 10):
     # 因为时长有波动，必须使用原生 ffmpeg。
-    command = ['ffmpeg','-i',f"./video/{aid}.mp4",'-ss',str(start_time),'-t',str(duration),"-c:a","copy",f"./videoc/{aid}.mp4"]
+    command = ['ffmpeg','-i',f"./video/{aid}.mp4",'-ss',str(start_time),'-t',str(duration),"-c:v",vcodec,"-c:a","copy",f"./videoc/{aid}.mp4"]
     if not os.path.exists(f"./videoc/{aid}.mp4"):
         subprocess.Popen(command).wait()
     return f"./videoc/{aid}.mp4"
