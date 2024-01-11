@@ -251,11 +251,11 @@ def video_cut(aid,start_time = 0,duration = 10):
     if(videoRatio >= screenRatio):
         should_height = videoSourceSize["width"] / screenRatio
         padding = (should_height - videoSourceSize["height"]) / 2
-        scale_src = f"pad={videoSourceSize["width"]}:{should_height}:0:{padding}:black"
+        scale_src = f"pad={videoSourceSize['width']}:{should_height}:0:{padding}:black"
     else:
         should_width = videoSourceSize["height"] * screenRatio
-        padding = (should_width - videoSourceSize["width"]) / 2
-        scale_src = f"pad={should_width}:{videoSourceSize["height"]}:{padding},0:black"
+        padding = (should_width - videoSourceSize['width']) / 2
+        scale_src = f"pad={should_width}:{videoSourceSize['height']}:{padding},0:black"
     command = ['ffmpeg','-i',f"./video/{aid}.mp4",'-ss',str(start_time),'-t',str(duration),'-vf',scale_src,"-c:v",vcodec,"-c:a","copy",f"./videoc/{aid}.mp4"]
     if not os.path.exists(f"./videoc/{aid}.mp4"):
         subprocess.Popen(command).wait()
