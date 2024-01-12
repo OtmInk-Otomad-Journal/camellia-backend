@@ -31,7 +31,7 @@ const video = wvc.createSingleVideo({
     pagePrepareFn: async page => {
         const _page = page.target;
         await _page.evaluate(function(data){
-            inject_wvc(data);
+            window.onload = inject_wvc(data);
         },data)
     }
 });
