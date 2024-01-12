@@ -25,7 +25,7 @@ const video = wvc.createSingleVideo({
     videoBitrate: "10000k",
     // GPU 加速
     browserUseGPU: true,
-    browserFrameRateLimit: false,
+    // browserFrameRateLimit: false,
     // Cli 的进度条
     showProgress: true,
     pagePrepareFn: async page => {
