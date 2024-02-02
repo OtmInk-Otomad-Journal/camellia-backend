@@ -71,7 +71,7 @@ main_to_side_offset = -1
 
 insert_count = 5 # 主榜中断个数
 
-vcodec = "h264_nvenc"
+vcodec = "libx264"
 
 render_format = {
     "vcodec": vcodec,
