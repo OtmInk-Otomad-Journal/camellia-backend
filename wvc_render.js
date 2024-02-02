@@ -8,7 +8,7 @@ const data = require(src[0])
 const wvc = new WebVideoCreator();
 
 wvc.config({
-    mp4Encoder: VIDEO_ENCODER.INTEL.H264
+    mp4Encoder: VIDEO_ENCODER.NVIDIA.H264
 });
 
 // 创建单幕视频
