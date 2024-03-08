@@ -250,20 +250,26 @@ def retrieve_single_video_comment(video_aid: int, credential: Credential, max_tr
     return status, comments_raw
 
 def retrieve_single_video_stat(video_aid: int, max_try_times=10, sleep_inteval=3.) -> Tuple[int, Dict[str, Any]]:
-    task = video.Video(aid=video_aid).get_info # get_stat 貌似已经失效了
-    status, stat = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
+    # task = video.Video(aid=video_aid).get_info # get_stat 貌似已经失效了
+    # status, stat = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
 
-    # ### 临时补救 API，非必要不动它。
-    # time.sleep(0.2)
-    # logging.info(f"获取 av{video_aid}")
-    # temp_dict = requests.get("https://api.bilibili.com/x/web-interface/view",{"aid": video_aid})
-    # status = temp_dict.status_code
-    # try:
-    #     stat_json = temp_dict.json()
-    #     stat = stat_json["data"]["stat"]
-    #     stat.update({"copyright":stat_json["data"]["copyright"]})
-    # except:
-    #     stat = None
+    ### 临时补救 API，非必要不动它。
+    headers = {
+        'Accept': '*/*',
+        # 'Cookie': raw_cookie,
+        'Referer': 'https://www.bilibili.com/v/kichiku/mad/',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
+                      'Chrome/61.0.3163.79 Safari/537.36 Maxthon/5.0'
+    }
+    time.sleep(0.2)
+    logging.info(f"获取 av{video_aid}")
+    temp_dict = requests.get("https://api.bilibili.com/x/web-interface/view",{"aid": video_aid},headers=headers)
+    status = temp_dict.status_code
+    try:
+        stat_json = temp_dict.json()
+        stat = stat_json["data"]
+    except:
+        stat = None
 
     assert isinstance(stat, dict)
 
