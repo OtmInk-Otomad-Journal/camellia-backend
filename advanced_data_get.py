@@ -1,4 +1,5 @@
 # 日志记录
+from config import *
 import logging
 logging.basicConfig(format='[%(levelname)s]\t%(message)s',filename="log/" + time.strftime("%Y-%m-%d %H-%M-%S") + '.log', level=logging.INFO)
 formatter = logging.Formatter('[%(levelname)s]\t%(message)s')
@@ -9,7 +10,6 @@ logger = logging.getLogger()
 logger.addHandler(console_handler)
 
 import csv
-from config import *
 from get_video_info_score import aid_to_score_norm, selected_video_stat, all_video_info
 from program_function import check_dir , get_img , get_video , calc_color , exactVideoLength , html_unescape , get_danmaku
 from danmuku_time import danmuku_time
