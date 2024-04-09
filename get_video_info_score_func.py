@@ -10,14 +10,16 @@ import logging
 import math
 import requests
 logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s')
-logging.getLogger("requests").setLevel(logging.WARNING)
-logging.getLogger("urllib3").setLevel(logging.WARNING)
+ignored_debug_lib = ["requests", "urllib3", "asyncio", "httpx", "httpcore"]
+for lib in ignored_debug_lib: logging.getLogger(lib).setLevel(logging.WARNING)
+
 # pip install bilibili_api_python
 from bilibili_api import comment, sync, video
 from bilibili_api import Credential
 from bilibili_api.exceptions import ResponseCodeException
 from bilibili_api.exceptions.NetworkException import NetworkException
 from aiohttp.client_exceptions import ServerDisconnectedError, ClientOSError
+from httpx import ConnectTimeout, RemoteProtocolError, ReadTimeout
 
 def calc_median(data: List[float]) -> float:
     data_ = sorted(data)
@@ -58,6 +60,8 @@ def get_info_by_time(page_index: int, video_zone: int, time_from: str, time_to: 
 
     _, data = apply_response_getter(url, headers)
     video_list: List[Dict[str, Any]] = data["result"]
+    if not video_list:
+        return [], 0
     for i, video in enumerate(video_list):
         video.pop("arcrank" , None)
         video.pop("is_pay"  , None)
@@ -95,7 +99,7 @@ async def get_comments(aid: int, credential: Credential) -> List[Dict]:
     page = 1
     count = 0
     while True:
-        c = await comment.get_comments(aid, comment.ResourceType.VIDEO, page, credential=credential)
+        c = await comment.get_comments(aid, comment.CommentResourceType.VIDEO, page, credential=credential)
         assert type(c) is dict
         if "replies" not in c or c['replies'] is None: break
         comments.extend(c['replies'])
@@ -110,7 +114,7 @@ def get_credential(cookie_file_path: str) -> Credential:
     if os.path.isfile(cookie_file_path):
         cookie_raw = open(cookie_file_path, "r", encoding="utf-8").read()
         cookie_split = cookie_raw.replace("; ", ";").split(";")
-        cookie_split.remove("")
+        cookie_split = [i for i in cookie_split if i]
         cookie = { i.split("=")[0].lower(): i.split("=")[1] for i in cookie_split }
         sessdata   = cookie.get('sessdata',   sessdata  )
         bili_jct   = cookie.get('bili_jct',   bili_jct  )
@@ -162,6 +166,15 @@ def retrieve_video_comment(data_path:str, all_video_info: Dict[int, Dict], *, cr
     return skipped_aid, invalid_aid
 
 def retrieve_video_stat(data_path:str, aid_list:List[int], force_update=False, max_try_times=10, sleep_inteval=3.) -> Tuple[Set[int], Set[int], Dict[int, Dict]]:
+    """ 获取视频的各项数据，如播放量、点赞数、硬币数、弹幕数等
+    :param data_path: 数据存储路径，将在该目录下生成 `stat` 子目录
+    :param aid_list: av 号列表
+    :param force_update: 是否强制更新，是则会重新获取所有视频的信息
+    :param max_try_times: 最大尝试次数
+    :param sleep_inteval: 间隔时间
+    
+    :return: 跳过的 aid, 无效的 aid, 以 av 号为键的视频数据字典
+    """
     skipped_aid = set()
     invalid_aid_path = os.path.join(data_path, "invalid_aid.pkl")
     if os.path.exists(invalid_aid_path): invalid_aid = marshal.load(open(invalid_aid_path, "rb"))
@@ -287,11 +300,13 @@ def apply_bilibili_api(task: Callable, video_aid: int, *, max_try_times=10, slee
         try:
             contents = sync(task())
             break
-        except (ServerDisconnectedError, ClientOSError):
+        except (ServerDisconnectedError, ClientOSError, ConnectTimeout, RemoteProtocolError, ReadTimeout):
             try_times += 1
             if try_times == max_try_times: # 网络错误
-                logging.warning(f"ServerDisconnectedError at {video_aid}, skipped")
+                logging.warning(f"Keep ServerDisconnectedError at {video_aid}, skipped")
                 return -2, []
+            else:
+                logging.info(f"ServerDisconnectedError at {video_aid}, retrying {try_times} times")
         except ResponseCodeException as e:
             if e.code in {12002, 12061}: # 大概是被删了或是移到别的分区了
                 logging.warning(f"ResponseCodeException at {video_aid}, aborted")
@@ -307,6 +322,9 @@ def apply_bilibili_api(task: Callable, video_aid: int, *, max_try_times=10, slee
             else:
                 logging.error(f"Unhandled NetworkException: {e.status} at {video_aid}, skipped")
                 return -2, [] 
+        except KeyboardInterrupt:
+            logging.info(f"KeyboardInterrupt at av{video_aid}, exiting")
+            exit()
         except Exception as e:
             logging.error(f"Unhandled Exception: {type(e)} {e}")
             return -2, []
@@ -319,7 +337,14 @@ def apply_bilibili_api(task: Callable, video_aid: int, *, max_try_times=10, slee
 def apply_response_getter(url: str, headers: Optional[Dict[str, str]]=None, *, max_try_times=10, sleep_inteval=3.) -> Tuple[int, Dict[str, Any]]:
     try_times = 0
     while try_times < max_try_times:
-        response = requests.get(url, headers=headers)
+        try:
+            response = requests.get(url, headers=headers)
+        except (requests.exceptions.RequestException, requests.exceptions.ConnectionError) as e:
+            logging.error(f"Unhandled RequestException: {e}, retrying {try_times} times")
+            try_times += 1
+            time.sleep(sleep_inteval * (try_times+1))
+            continue
+        
         response.encoding = "utf-8"
         result = json.loads(response.text)
         return_code = result["code"]
@@ -334,3 +359,34 @@ def apply_response_getter(url: str, headers: Optional[Dict[str, str]]=None, *, m
         data = result["data"]
         return 1, data
     raise Exception(f"Max Try Times Exceeded For {url}")
+
+class DateYield:
+    """ 日期迭代器
+    在指定日期范围内，如果范围小于一个月，则直接 yield 这个范围；否则将每个月倒序分开 yield
+    如指定了 07-25 到 09-25，则 yield 结果将会是 (09-01, 09-25) (08-01, 08-31) (07-25, 07-31)
+    """
+    src_date: datetime.datetime
+    dst_date: datetime.datetime
+    src_date_str: str
+    dst_date_str: str
+    def __init__(self, src_date: datetime.datetime, dst_date: datetime.datetime):
+        self.src_date = src_date
+        self.dst_date = dst_date
+        self.src_date_str = src_date.strftime("%Y%m%d")
+        self.dst_date_str = dst_date.strftime("%Y%m%d")
+    
+    def __iter__(self):
+        if self.dst_date-self.src_date < datetime.timedelta(days=30):
+            yield (self.src_date.strftime("%Y%m%d"),
+                   self.dst_date.strftime("%Y%m%d"))
+        else:
+            dst_yielding = self.dst_date
+            src_yielding = self.dst_date.replace(day=1)
+            while src_yielding >= self.src_date and dst_yielding >= self.src_date:
+                yield (src_yielding.strftime("%Y%m%d"),
+                       dst_yielding.strftime("%Y%m%d"))
+                dst_yielding = src_yielding + datetime.timedelta(days=-1)
+                src_yielding = dst_yielding.replace(day=1)
+                if src_yielding < self.src_date:
+                    src_yielding = self.src_date
+

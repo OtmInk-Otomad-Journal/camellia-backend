@@ -3,17 +3,18 @@ import os
 import marshal
 import datetime
 import logging
+import time
+import random
 from collections import defaultdict
 from typing import List, Tuple, Dict, Union, Any
 
-from config import base_path, delta_days, range_days, pull_video_copyright, video_zones
+from config import base_path, pull_video_copyright, video_zones, delta_days, range_days,
 from config import tag_whitelist, tag_whitezone, prefilter_comment_less_than, main_end, side_end
 from config import pull_full_list_stat, sleep_inteval, cookie_file_path
 logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s')
 
-from get_video_info_score_func import *
-
-str_time = datetime.datetime.now().strftime('%y%m%d') # 今天日期
+from get_video_info_score_func import calc_median, get_info_by_time, get_credential, retrieve_video_comment, calc_aid_score, retrieve_video_stat, print_aid_info
+from get_video_info_score_func import DateYield
 
 # 其实这些关键词的影响并不大
 target_good_key_words = [
@@ -25,14 +26,14 @@ target_bad_key_words = ["加油","注意","建议","进步","稚嫩","不足","�
                         "文艺复兴","倒退","大势所趋","dssq","烂"]
 
 if not os.path.exists(base_path): os.makedirs(base_path)
-str_date = datetime.datetime.strptime(str_time,"%y%m%d")
-src_date = str_date + datetime.timedelta(days=-delta_days)
+now_date = datetime.datetime.now()
+src_date = now_date + datetime.timedelta(days=-delta_days)
 dst_date = src_date + datetime.timedelta(days=+range_days-1)
-src_date_str = src_date.strftime("%Y%m%d")
-dst_date_str = dst_date.strftime("%Y%m%d")
-logging.info(f"选取时间 从 {src_date_str}-00:00 到 {dst_date_str}-23:59")
-data_folder_name = src_date_str + " - " + dst_date_str
-data_path = os.path.join(base_path, data_folder_name)
+# src_date = datetime.datetime.strptime("20090701","%Y%m%d")
+# dst_date = datetime.datetime.strptime("20240331","%Y%m%d")
+data_yield = DateYield(src_date, dst_date)
+logging.info(f"选取时间 从 {data_yield.src_date_str}-00:00 到 {data_yield.dst_date_str}-23:59")
+data_path = os.path.join(base_path, f"{data_yield.src_date_str} - {data_yield.dst_date_str}")
 stat_dir = os.path.join(data_path, "stat")
 info_dir = os.path.join(data_path, "info")
 comment_dir = os.path.join(data_path, "comment")
@@ -43,25 +44,37 @@ os.makedirs(comment_dir, exist_ok=True)
 ####################### 拉取数据 #########################
 all_video_info: Dict[int, Dict] = {}
 for video_zone in video_zones:
-    video_info_collection_file_name = f"info_{video_zone}.json"
-    video_info_collection_file_path = os.path.join(info_dir, video_info_collection_file_name)
-    if os.path.exists(video_info_collection_file_path):
-        logging.info(f"分区 {video_zone} 的视频信息已经存有文件，直接读取")
-        with open(video_info_collection_file_path, "r", encoding="utf-8") as f:
-            all_video_info.update(json.load(f))
-        continue
-    info_page, num_pages = get_info_by_time(1, video_zone, src_date_str, dst_date_str, copyright=str(pull_video_copyright))
-    logging.info(f"分区 {video_zone} 的第 1 页完成，共 {num_pages} 页")
-    all_video_info.update({i['id']:i for i in info_page})
-    # 如果页数正向遍历，那么一旦有视频被删除，列表上之后的视频会向前挪动
-    # 跨页挪动的视频就会被漏掉，所以反向遍历
-    for page_index in range(num_pages, 1, -1):
-        time.sleep(sleep_inteval + random.random())
-        info_page, num_pages = get_info_by_time(page_index, video_zone, src_date_str, dst_date_str, copyright=str(pull_video_copyright))
-        all_video_info.update({i['id']:i for i in info_page})
-        logging.info(f"第 {page_index} 页完成")
-    with open(video_info_collection_file_path, "w", encoding="utf-8") as f:
-        json.dump(all_video_info, f, ensure_ascii=False, indent=4)
+    video_info_in_zone: Dict[int, Dict] = {}
+    
+    for src_date_str, dst_date_str in data_yield:
+        video_info_in_zone_in_time: Dict[int, Dict] = {}
+        
+        info_package_file_name = f"info_{video_zone:03}_{src_date_str[:6]}.json"
+        info_package_file_path = os.path.join(info_dir, info_package_file_name)
+        if os.path.exists(info_package_file_path):
+            logging.info(f"分区 {video_zone} 在 {src_date_str}~{dst_date_str} 的视频信息有存档，将读取")
+            with open(info_package_file_path, "r", encoding="utf-8") as f:
+                video_info_in_zone.update(json.load(f))
+            continue
+        info_page, num_pages = get_info_by_time(
+            1, video_zone, src_date_str, dst_date_str,
+            copyright=str(pull_video_copyright))
+        logging.info(f"取得分区 {video_zone} ({src_date_str}~{dst_date_str} 部分) 的第 1 页，共 {num_pages} 页")
+        video_info_in_zone_in_time.update({i['id']:i for i in info_page})
+        # 如果页数正向遍历，那么一旦有视频被删除，列表上之后的视频会向前挪动
+        # 跨页挪动的视频就会被漏掉，所以反向遍历
+        for page_index in range(num_pages, 1, -1):
+            time.sleep(sleep_inteval + random.random())
+            info_page, _ = get_info_by_time(
+                page_index, video_zone, src_date_str, dst_date_str,
+                copyright=str(pull_video_copyright))
+            video_info_in_zone_in_time.update({i['id']:i for i in info_page})
+            logging.info(f"第 {page_index} 页完成")
+        with open(info_package_file_path, "w", encoding="utf-8") as f:
+            json.dump(video_info_in_zone_in_time, f, ensure_ascii=False, indent=4)
+        video_info_in_zone.update(video_info_in_zone_in_time)
+    all_video_info.update(video_info_in_zone)
+
 logging.info(f"视频信息获取完成，视频总数: {len(all_video_info)}")
 
 whitelist_filter = lambda video_info: (video_info['tid'] in tag_whitezone) or (len(set(video_info["tag"]).intersection(tag_whitelist))>0)
