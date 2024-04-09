@@ -1,5 +1,6 @@
 import logging
 import numpy as np
+import math
 from config import *
 from lxml import etree
 
@@ -47,7 +48,7 @@ def danmuku_time(aid,full_time,sep_time,full = False,cid = None):
         high_index = 0
         logging.info('获取 av' + str(aid) + ' 视频的起始时间为 0')
         if full_time < sep_time:
-            end_index = full_time
+            end_index = math.floor(full_time)
         else:
             end_index = sep_time
     else:
