@@ -1,14 +1,15 @@
 import json
 import time
 import os
-from typing import List,Tuple,Dict,Union,Optional,Any,Set,Callable
-from functools import partial
 import random
 import marshal
 import datetime
 import logging
 import math
 import requests
+from typing import List, Tuple, Dict, Optional, Set, Callable, Optional, Any
+from functools import partial
+from collections import defaultdict
 logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s')
 ignored_debug_lib = ["requests", "urllib3", "asyncio", "httpx", "httpcore"]
 for lib in ignored_debug_lib: logging.getLogger(lib).setLevel(logging.WARNING)
@@ -20,6 +21,8 @@ from bilibili_api.exceptions import ResponseCodeException
 from bilibili_api.exceptions.NetworkException import NetworkException
 from aiohttp.client_exceptions import ServerDisconnectedError, ClientOSError
 from httpx import ConnectTimeout, RemoteProtocolError, ReadTimeout
+
+from get_video_info_score_struct import Mid
 
 def calc_median(data: List[float]) -> float:
     data_ = sorted(data)
@@ -109,17 +112,21 @@ async def get_comments(aid: int, credential: Credential) -> List[Dict]:
         time.sleep(1)
     return reply_trimmer(comments)
 
-def get_credential(cookie_file_path: str) -> Credential:
+def get_credential(cookie_raw: str) -> Tuple[str, ...]:
+    from config_login import sessdata, bili_jct, buvid3, dedeuserid
+    cookie_split = cookie_raw.replace("; ", ";").split(";")
+    cookie_split = [i for i in cookie_split if i]
+    cookie = { i.split("=")[0].lower(): i.split("=")[1] for i in cookie_split }
+    sessdata   = cookie.get('sessdata',   sessdata  )
+    bili_jct   = cookie.get('bili_jct',   bili_jct  )
+    buvid3     = cookie.get('buvid3',     buvid3    )
+    dedeuserid = cookie.get('dedeuserid', dedeuserid)
+    return sessdata, bili_jct, buvid3, dedeuserid
+def get_credential_from_path(cookie_file_path: str) -> Credential:
     from config_login import sessdata, bili_jct, buvid3, dedeuserid
     if os.path.isfile(cookie_file_path):
         cookie_raw = open(cookie_file_path, "r", encoding="utf-8").read()
-        cookie_split = cookie_raw.replace("; ", ";").split(";")
-        cookie_split = [i for i in cookie_split if i]
-        cookie = { i.split("=")[0].lower(): i.split("=")[1] for i in cookie_split }
-        sessdata   = cookie.get('sessdata',   sessdata  )
-        bili_jct   = cookie.get('bili_jct',   bili_jct  )
-        buvid3     = cookie.get('buvid3',     buvid3    )
-        dedeuserid = cookie.get('dedeuserid', dedeuserid)
+        sessdata, bili_jct, buvid3, dedeuserid = get_credential(cookie_raw)
     else:
         if cookie_file_path != "":
             print(f"{cookie_file_path} 不存在")
@@ -165,13 +172,14 @@ def retrieve_video_comment(data_path:str, all_video_info: Dict[int, Dict], *, cr
     if len(invalid_aid)>0: marshal.dump(invalid_aid, open(os.path.join(data_path, "invalid_aid.pkl"), "wb"))
     return skipped_aid, invalid_aid
 
-def retrieve_video_stat(data_path:str, aid_list:List[int], force_update=False, max_try_times=10, sleep_inteval=3.) -> Tuple[Set[int], Set[int], Dict[int, Dict]]:
+def retrieve_video_stat(data_path:str, aid_list:List[int], force_update=False, max_try_times=10, sleep_inteval=3., cookie_raw: Optional[str]=None) -> Tuple[Set[int], Set[int], Dict[int, Dict]]:
     """ 获取视频的各项数据，如播放量、点赞数、硬币数、弹幕数等
     :param data_path: 数据存储路径，将在该目录下生成 `stat` 子目录
     :param aid_list: av 号列表
     :param force_update: 是否强制更新，是则会重新获取所有视频的信息
     :param max_try_times: 最大尝试次数
     :param sleep_inteval: 间隔时间
+    :param cookie_raw: cookie 字符串，针对某些早期「会员领域」视频用
     
     :return: 跳过的 aid, 无效的 aid, 以 av 号为键的视频数据字典
     """
@@ -189,11 +197,15 @@ def retrieve_video_stat(data_path:str, aid_list:List[int], force_update=False, m
             continue
         if video_aid in invalid_aid: continue
         
-        status, stat = retrieve_single_video_stat(video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
-        if status <= 0:
+        status, stat = retrieve_single_video_stat(
+            video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval, cookie=cookie_raw)
+        if status in [-1, -2]:
             if status == -1: invalid_aid.add(video_aid)
             if status == -2: skipped_aid.add(video_aid)
             time.sleep(sleep_inteval)
+            continue
+        elif status == -403:
+            logging.error(f"访问 av{video_aid} 需要 cookie，暂时跳过")
             continue
         
         with open(stat_file_path, "w", encoding="utf-8") as f:
@@ -204,31 +216,35 @@ def retrieve_video_stat(data_path:str, aid_list:List[int], force_update=False, m
     if len(invalid_aid)>0: marshal.dump(invalid_aid, open(os.path.join(data_path, "invalid_aid.pkl"), "wb"))
     return skipped_aid, invalid_aid, selected_aid_stats
 
-def calc_aid_score(video_info: Dict, comment_list: Optional[List[Dict]], good_key_words: List[str], bad_key_words: List[str], all_mid_list: Dict[int, Dict], s2_base:float=0, show_verbose=False) -> Tuple[float, float]:
-    if comment_list is None or list(comment_list)==0: return 0, 0
-    aid_score = 0
+def str_match_first(src: str, target_first: Set[str], target_map: Dict[str, List[str]]) -> bool:
+    # 优化了一天结果还没原本速度快，摆了
+    if not (inter:= set(src).intersection(target_first)): return False
+    target_filtered = []
+    for i in inter:
+        target_filtered.extend(target_map[i])
+    for kw in target_filtered:
+        if kw in src:
+            return True
+    return False
+def calc_aid_score(video_info: Dict, comment_list: Optional[List[Dict]],
+                   good_keyword_first: Set[str], bad_keyword_first: Set[str],
+                   good_keyword_map: Dict[str, List[str]], bad_keyword_map: Dict[str, List[str]],
+                   all_mid_list: Dict[int, Mid], s2_base:float=0) -> Tuple[float, float]:
+    if not comment_list: return 0, 0
+    comment_score_summary: Dict[int, List[float]] = defaultdict(list)
     for comment in comment_list:
-        comment_mid   = comment["mid"]
-        comment_name  = all_mid_list[comment["mid"]]['name'] if comment["mid"] in all_mid_list else "————"
-        comment_s1    = all_mid_list[comment["mid"]]['s1'] if comment["mid"] in all_mid_list else 0
-        comment_s2    = s2_base + (all_mid_list[comment["mid"]]['s2'] if comment["mid"] in all_mid_list else 0)
-        comment_score = (math.atan(comment_s1) + math.atan(comment_s2)) / (math.pi*2)
-        comment_msg   = comment["message"].lower().replace("\n", "\t")
-        comment_time  = time.strftime("@%y%m%d/%H%M", time.localtime(comment['ctime']))
+        comment_mid   = all_mid_list.get(comment["mid"], Mid(0))
+        comment_s1    = comment_mid.s1 + comment_mid.s1_bias
+        comment_s2    = comment_mid.s2 + s2_base
+        comment_score = math.atan(comment_s1) / (math.pi*2) + comment_s2
+        comment_msg   = comment["message"].lower()
         
-        hit_good_key_words = False
-        for key_word in good_key_words:
-            if key_word in comment_msg:
-                hit_good_key_words = True
-                break
-        hit_bad_key_words = False
-        for key_word in bad_key_words:
-            if key_word in comment_msg:
-                hit_bad_key_words = True
-                break
+        hit_good_key_words = str_match_first(comment_msg, good_keyword_first, good_keyword_map)
+        hit_bad_key_words  = str_match_first(comment_msg, bad_keyword_first, bad_keyword_map)
         multiply_value = 1 * (2 if hit_good_key_words else 1) * (0.5 if hit_bad_key_words else 1)
-        aid_score += comment_score * multiply_value
-        if show_verbose: print("[%10s] %s ( %6.2f + %4.2f ) x%.2f %s: %s" % (comment_mid, comment_time, comment_s1, comment_s2, multiply_value, comment_name, comment_msg))
+        comment_score_summary[comment_mid.mid].append(comment_score * multiply_value)
+    
+    aid_score = sum([sum(v) for k,v in comment_score_summary.items()])
     aid_favorite = video_info['favorites']
     # aid_score /= math.log2(len(comment_list)+2)
     aid_score_norm = math.sqrt(aid_score * math.log10(aid_favorite/10+1))
@@ -236,18 +252,21 @@ def calc_aid_score(video_info: Dict, comment_list: Optional[List[Dict]], good_ke
     return aid_score, aid_score_norm
 
 def print_aid_info(video_info:Dict[str, Any], comments:List[Dict],
-                    good_key_words: List[str], bad_key_words: List[str], 
-                    all_mid_list: Dict[int, Dict], verbose:bool=False):
+                   good_keyword_first: Set[str], bad_keyword_first: Set[str],
+                   good_keyword_map: Dict[str, List[str]], bad_keyword_map: Dict[str, List[str]],
+                   all_mid_list: Dict[int, Mid]):
     aid          = video_info["id"]
     aid_author   = video_info["author"]
     aiu_mid      = video_info["mid"]
-    aid_view     = int(video_info['play'])
+    aid_view     = max(int(video_info['play']), 0) if video_info['play'] != "--" else "--"
     aid_title    = video_info['title']
     aid_favorite = video_info['favorites']
     aid_pubtime  = video_info["pubdate"]
-    aid_view     = aid_view if aid_view >= 0 else 0
-    aid_score, aid_score_norm = calc_aid_score(video_info, comments, good_key_words, bad_key_words, all_mid_list, show_verbose=verbose)
-    print("[av %i] 计分 = %5.6f @%s, 播放 %6i, 收藏 %5i, 评论 %3i || [uid %10i] %s: %s" % (aid, aid_score_norm, aid_pubtime, aid_view, aid_favorite, len(comments), aiu_mid, aid_author, aid_title))
+    aid_score, aid_score_norm = calc_aid_score(
+        video_info, comments,
+        good_keyword_first, bad_keyword_first,
+        good_keyword_map, bad_keyword_map, all_mid_list)
+    print(f"[av{aid:10}] 计分 = {aid_score_norm:7.4f} @{aid_pubtime}, 播放{aid_view:7}, 收藏{aid_favorite:5}, 评论{len(comments):4} || [uid{aiu_mid:10}] {aid_author}: {aid_title}")
     
 
 def retrieve_single_video_tag(video_aid: int, max_try_times=10, sleep_inteval=3) -> Tuple[int, List[str]]:
@@ -262,7 +281,7 @@ def retrieve_single_video_comment(video_aid: int, credential: Credential, max_tr
     status, comments_raw = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
     return status, comments_raw
 
-def retrieve_single_video_stat(video_aid: int, max_try_times=10, sleep_inteval=3.) -> Tuple[int, Dict[str, Any]]:
+def retrieve_single_video_stat(video_aid: int, max_try_times=10, sleep_inteval=3., cookie: Optional[str]=None) -> Tuple[int, Dict[str, Any]]:
     # task = video.Video(aid=video_aid).get_info # get_stat 貌似已经失效了
     # status, stat = apply_bilibili_api(task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval)
 
@@ -274,17 +293,22 @@ def retrieve_single_video_stat(video_aid: int, max_try_times=10, sleep_inteval=3
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) '
                       'Chrome/61.0.3163.79 Safari/537.36 Maxthon/5.0'
     }
+    if cookie: headers['Cookie'] = cookie
     time.sleep(0.2)
     logging.info(f"获取 av{video_aid}")
     temp_dict = requests.get("https://api.bilibili.com/x/web-interface/view",{"aid": video_aid},headers=headers)
     status = temp_dict.status_code
+    
+    if status == -403: # 无 cookie 会「访问权限不足」的早期受屏蔽视频
+        return -403, {}
+    
     try:
         stat_json = temp_dict.json()
         stat = stat_json["data"]
     except:
         stat = None
-
-    assert isinstance(stat, dict)
+    
+    assert isinstance(stat, dict), f"获取 av{video_aid} 失败，{status = }, {stat = }"
 
     stating = stat["stat"] # 由于获取的 get_info，stat 需要单独挤进去
     stat.update(stating)
@@ -330,9 +354,7 @@ def apply_bilibili_api(task: Callable, video_aid: int, *, max_try_times=10, slee
             return -2, []
         finally:
             time.sleep(sleep_inteval * (try_times + 1))
-    
     return 1, contents
-
 
 def apply_response_getter(url: str, headers: Optional[Dict[str, str]]=None, *, max_try_times=10, sleep_inteval=3.) -> Tuple[int, Dict[str, Any]]:
     try_times = 0
@@ -359,34 +381,3 @@ def apply_response_getter(url: str, headers: Optional[Dict[str, str]]=None, *, m
         data = result["data"]
         return 1, data
     raise Exception(f"Max Try Times Exceeded For {url}")
-
-class DateYield:
-    """ 日期迭代器
-    在指定日期范围内，如果范围小于一个月，则直接 yield 这个范围；否则将每个月倒序分开 yield
-    如指定了 07-25 到 09-25，则 yield 结果将会是 (09-01, 09-25) (08-01, 08-31) (07-25, 07-31)
-    """
-    src_date: datetime.datetime
-    dst_date: datetime.datetime
-    src_date_str: str
-    dst_date_str: str
-    def __init__(self, src_date: datetime.datetime, dst_date: datetime.datetime):
-        self.src_date = src_date
-        self.dst_date = dst_date
-        self.src_date_str = src_date.strftime("%Y%m%d")
-        self.dst_date_str = dst_date.strftime("%Y%m%d")
-    
-    def __iter__(self):
-        if self.dst_date-self.src_date < datetime.timedelta(days=30):
-            yield (self.src_date.strftime("%Y%m%d"),
-                   self.dst_date.strftime("%Y%m%d"))
-        else:
-            dst_yielding = self.dst_date
-            src_yielding = self.dst_date.replace(day=1)
-            while src_yielding >= self.src_date and dst_yielding >= self.src_date:
-                yield (src_yielding.strftime("%Y%m%d"),
-                       dst_yielding.strftime("%Y%m%d"))
-                dst_yielding = src_yielding + datetime.timedelta(days=-1)
-                src_yielding = dst_yielding.replace(day=1)
-                if src_yielding < self.src_date:
-                    src_yielding = self.src_date
-

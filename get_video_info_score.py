@@ -5,25 +5,27 @@ import datetime
 import logging
 import time
 import random
+import shutil
 from collections import defaultdict
-from typing import List, Tuple, Dict, Union, Any
+from typing import List, Tuple, Dict, Set
 
-from config import base_path, pull_video_copyright, video_zones, delta_days, range_days,
+from config import base_path, weight_path, weight_new_comp, pull_video_copyright, video_zones, delta_days, range_days, recursive_times, update_s2
 from config import tag_whitelist, tag_whitezone, prefilter_comment_less_than, main_end, side_end
 from config import pull_full_list_stat, sleep_inteval, cookie_file_path
 logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s')
 
-from get_video_info_score_func import calc_median, get_info_by_time, get_credential, retrieve_video_comment, calc_aid_score, retrieve_video_stat, print_aid_info
-from get_video_info_score_func import DateYield
+from get_video_info_score_func import calc_median, get_info_by_time, get_credential_from_path, retrieve_video_comment, calc_aid_score, retrieve_video_stat, print_aid_info
+from get_video_info_score_struct import DateYield, Mid
 
 # 其实这些关键词的影响并不大
-target_good_key_words = [
-    "fuxi","复习","複習","fx","高技术","好听","好汀","好聽","喜欢","喜歡","支持","漂亮","舒服"
+target_good_keyword = [
+    "fuxi","复习","複習","fx","高技术","好听","好汀","好聽","喜欢","喜歡","支持","漂亮","舒服",
     "死了","厉害","厲害","最好","最高","最佳","订餐","sk","suki","suang","爽",
-    "不错","不錯","牛逼","牛批","nb","！！！","神作","帅","帥","触","觸","强","強","棒","天才",
-    "tql","wsl","yyds","永远的神","谁的小号","太神了","震撼","すき","可爱","上瘾","上头","洗脑","草","我浪","神","顶"]
-target_bad_key_words = ["加油","注意","建议","进步","稚嫩","不足","不好",
+    "不错","不錯","牛逼","牛批","nb","！！！","神","帅","帥","触","觸","强","強","棒","天才",
+    "tql","wsl","yyds","小号","震撼","すき","可爱","上瘾","上头","洗脑","草","我浪","顶"]
+target_bad_keyword = ["加油","注意","建议","进步","稚嫩","不足","不好",
                         "文艺复兴","倒退","大势所趋","dssq","烂"]
+
 
 if not os.path.exists(base_path): os.makedirs(base_path)
 now_date = datetime.datetime.now()
@@ -80,11 +82,13 @@ logging.info(f"视频信息获取完成，视频总数: {len(all_video_info)}")
 whitelist_filter = lambda video_info: (video_info['tid'] in tag_whitezone) or (len(set(video_info["tag"]).intersection(tag_whitelist))>0)
 all_video_info = {int(k):v for k,v in all_video_info.items() if whitelist_filter(v)}
 logging.info("按白名单过滤后，待拉取视频数: " + str(len(all_video_info)))
-comment_count_filter = lambda video_info: (video_info["review"] > prefilter_comment_less_than)
+comment_count_filter = lambda video_info: (video_info["review"] >= prefilter_comment_less_than)
 all_video_info = {k:v for k,v in all_video_info.items() if comment_count_filter(v)}
 logging.info("按评论数过滤后，待拉取视频数: " + str(len(all_video_info)))
 
-credential = get_credential(cookie_file_path)
+credential = get_credential_from_path(cookie_file_path)
+cookie_raw = open(cookie_file_path, "r", encoding="utf-8").read()
+
 skipped_aid, invalid_aid = retrieve_video_comment(data_path, all_video_info, credential=credential, force_update=False, sleep_inteval=sleep_inteval)
 if len(skipped_aid)>0:
     logging.warning("被跳过的 aid: " + str(skipped_aid))
@@ -95,15 +99,30 @@ if len(invalid_aid)>0:
 
 ####################### 计算得分 #########################
 logging.info("汇总评论中")
-all_mid_list: Dict[int, Dict[str, Any]] = marshal.load(open(os.path.join(base_path, "all_mid_list.dat"), "rb"))
-mid_s2_list = [mid_info['s2'] for mid_info in all_mid_list.values()]
-# all_mid_s2_mean = sum(mid_s2_list) / len(mid_s2_list)
-all_mid_s2_median = calc_median(mid_s2_list)
-# for mid in sorted(all_mid_list.values(), key=lambda x: -x['s1']):
-#     if mid['s1']>10: print("s1 = %7.2f, s2 = %4.2f, mid=%10i, name = %s" % (mid['s1'], mid['s2'], mid['mid'], mid['name'],))
+mid_dump_path_built = os.path.join(weight_path, "mid_list.dat") # 构建出来的、会更新的权重
+mid_dump_path_basic = os.path.join(weight_path, "mid_list_base.dat") # 底本
+mid_dump_path_bakup = os.path.join(weight_path, "mid_list.bak.dat") # 备份
+mid_dump_path_obsol = os.path.join(weight_path, "mid_list_obs.dat") # 旧权重
 
-assert isinstance(invalid_aid, set)
+if os.path.exists(mid_dump_path_built): 
+    all_mid_list: Dict[int, Mid] = Mid.deserialize_mid(mid_dump_path_built)
+elif os.path.exists(mid_dump_path_basic):
+    all_mid_list: Dict[int, Mid] = Mid.deserialize_mid(mid_dump_path_basic)
+else:
+    logging.error("权重文件缺失，将退出")
+    exit()
+weight_new_comp = max(min(weight_new_comp, 1.), 0.)
+if weight_new_comp < 1.:
+    logging.info(f"新权重比例为 {weight_new_comp}，将读取旧权重并混合")
+    all_mid_list_old: Dict[int, Mid] = Mid.deserialize_mid_oldstyle(mid_dump_path_obsol)
+    all_mid_list = {k: v.mix_weight(all_mid_list_old.get(k, None), weight_new_comp) for k,v in all_mid_list.items()}
+mid_s2_list = [mid_info.s2 for mid_info in all_mid_list.values()]
+all_mid_s2_median = calc_median(mid_s2_list)
+# for mid in sorted(all_mid_list.values(), key=lambda x: -x.s1):
+#     if mid.s1>10: print("s1 = %7.2f, s2 = %4.2f, mid=%10i, name = %s" % (mid.s1, mid.s1, mid.mid, mid.name,))
+
 aid_to_comment: Dict[int, List[Dict]] = defaultdict(list)
+s2_unit = 0.0003183094617716277 # math.atan(0.002) / (math.pi*2)
 for aid, video_info in all_video_info.items():
     comment_file_path = os.path.join(comment_dir, video_info['pubdate'][:10], f"{aid}.json")
     if not (os.path.exists(comment_file_path) or aid in invalid_aid):
@@ -113,29 +132,69 @@ for aid, video_info in all_video_info.items():
     if aid not in invalid_aid:
         with open(comment_file_path, "r", encoding="utf-8") as f:
             aid_to_comment[aid] = json.load(f)
+    
+    # 更新各 mid 的 s2 权重
+    if (video_mid:=video_info["mid"]) not in all_mid_list:
+        all_mid_list[video_mid] = Mid(video_mid)
+    if aid not in all_mid_list[video_mid].video_aids:
+        all_mid_list[video_mid].add_video_aid(aid)
+    
+    if update_s2:
+        for comment in aid_to_comment.get(aid, []):
+            if (comment_mid:=comment["mid"]) not in all_mid_list:
+                all_mid_list[comment_mid] = Mid(comment_mid)
+            all_mid_list[comment["mid"]].s2 += s2_unit
 
 logging.info("计算视频得分")
-aid_to_score: Dict[int, float] = {}
+target_good_keyword_first: Set[str] = set([kw[0] for kw in target_good_keyword])
+target_bad_keyword_first: Set[str] = set([kw[0] for kw in target_bad_keyword])
+target_good_keyword_first_map: Dict[str, List[str]] = defaultdict(list)
+target_bad_keyword_first_map: Dict[str, List[str]] = defaultdict(list)
+for kw in target_good_keyword:
+    target_good_keyword_first_map[kw[0]].append(kw)
+for kw in target_bad_keyword:
+    target_bad_keyword_first_map[kw[0]].append(kw)
+    
+# aid_to_score: Dict[int, float] = {}
 aid_to_score_norm: Dict[int, float] = {}
-for video_info in all_video_info.values():
-    video_aid = video_info["id"]
-    _, video_score_norm = calc_aid_score(
-        video_info, aid_to_comment[video_aid],
-        target_good_key_words, target_bad_key_words,
-        all_mid_list, s2_base=all_mid_s2_median)
-    aid_to_score_norm[video_aid] = video_score_norm
+for index in range(recursive_times):
+    logging.info(f"更新 uid 权重中，第 {index+1}/{recursive_times} 次迭代")
+    for video_aid, video_info in all_video_info.items():
+        _, video_score_norm = calc_aid_score(
+            video_info, aid_to_comment.get(video_aid, []),
+            target_good_keyword_first, target_bad_keyword_first, 
+            target_good_keyword_first_map, target_bad_keyword_first_map, 
+            all_mid_list, s2_base=all_mid_s2_median)
+        aid_to_score_norm[video_aid] = video_score_norm
+    if index == recursive_times-1: break
+    for mid in all_mid_list:
+        mid_info = all_mid_list[mid]
+        mid_score = 0
+        for aid in mid_info.video_aids:
+            mid_score += aid_to_score_norm.get(aid, 0)
+        mid_info.s1_bias = mid_score
 logging.info("计分完成")
 
 aid_and_score: List[Tuple[int, float]] = [(k,v) for k,v in aid_to_score_norm.items()]
 aid_and_score.sort(key=lambda x: -x[1])
 if __name__ == "__main__":
     for aid, aid_score in aid_and_score[:main_end+side_end]:
-        print_aid_info(all_video_info[aid], aid_to_comment[aid],
-                        target_good_key_words, target_bad_key_words, all_mid_list, verbose=False)
+        print_aid_info(
+            all_video_info[aid], aid_to_comment.get(aid, []),
+            target_good_keyword_first, target_bad_keyword_first, 
+            target_good_keyword_first_map, target_bad_keyword_first_map, 
+            all_mid_list)
 pull_size = pull_full_list_stat if pull_full_list_stat>0 else len(aid_and_score)
 selected_aid = [aid for aid, _ in aid_and_score[:pull_size]]
 logging.info(f"将获取排行前 {pull_size} 条视频的信息")
-_, _, selected_video_stat = retrieve_video_stat(data_path, selected_aid, sleep_inteval=sleep_inteval)
+_, _, selected_video_stat = retrieve_video_stat(
+    data_path, selected_aid,
+    sleep_inteval=sleep_inteval, cookie_raw=cookie_raw)
+
+# if os.path.exists(mid_dump_path_bak): os.remove(mid_dump_path_bak)
+if os.path.exists(mid_dump_path_built): shutil.copy2(mid_dump_path_built, mid_dump_path_bakup)
+Mid.serialize_mid(all_mid_list, mid_dump_path_built)
+
 logging.info(f"数据部分完成")
 
 
@@ -153,7 +212,7 @@ av号'id': 615690406,
     'senddate': 1688890463,
 作者'author': '坏枪',
 评论'review': 109,
-    'mid': 6636705,
+UID 'mid': 6636705,
     'is_union_video': 0,
     'rank_index': 10,
 播放'play': '7189',

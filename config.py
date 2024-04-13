@@ -23,13 +23,13 @@ api_header = {
                       'Chrome/61.0.3163.79 Safari/537.36 Maxthon/5.0'
     }
 
-sleep_inteval = 1             # 各处重复调用 api 的间隔秒数
+sleep_inteval = 1               # 各处重复调用 api 的间隔秒数
 
-base_path = "./AutoData/"       # 数据存储路径
+base_path = "./AutoData/"       # 视频数据及评论
 delta_days = 11                 # 以今天往前的第 delta_days 日开始统计
-range_days = 5700                  # 统计 range_days 天的数据
+range_days = 7                  # 统计 range_days 天的数据
 
-selected_day = "240331"       # 用于 Debug 或其它用途 , YYMMDD 230721
+selected_day = "240407"         # Debug 等用，指定结束日, YYMMDD 230721
 if selected_day != "":
     select = datetime.datetime.strptime(selected_day,"%y%m%d")
     delta_days = (datetime.datetime.now() - select).days + range_days - 1
@@ -41,8 +41,18 @@ tag_whitezone = [26]            # 仅统计此分区，以及
 tag_whitelist = ['音mad', "ytpmv"] # 含有这些 tag 的视频, 西文使用全小写
 pull_video_copyright = -1       # 1: 仅自制, 0: 仅转载, -1: 全部
 
-prefilter_comment_less_than = -1#range_days**(1/2) # 评论大于此数的视频才会被拉取评论
+prefilter_comment_less_than = range_days**(1/2) # 评论大于此数的视频才会被拉取评论
 pull_full_list_stat = 100       # 拉取前 pull_full_list_stat 个视频的点赞、硬币…数据, -1 为全部
+
+weight_path = "./weight/"       # 用户评论权重
+weight_new_comp = 1.            # 新权重的权重，0 代表完全使用旧权重，1 代表完全使用新权重
+recursive_times = 4             # 更新权重时的迭代次数；1 代表不更新；一般 4 即收敛
+
+# !Important! 是否更新 s2，即评论方的权重
+update_s2 = True
+# 因为没有办法识别重复添加，所以不要让同一条视频参与更新
+# 即运行这个脚本时，选定的时间范围不应重复；否则请关闭此选项
+# 直观问题：不改时间范围的话，重复运行脚本，每次 视频计分都会偏高稍许，且 *不可逆*
 
 # !Important! 拉取完整评论*可能*需登录, 见 config_login.py
 # 或者使用下面的 cookie 文件
