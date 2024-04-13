@@ -19,23 +19,22 @@ class Mid:
     
     @staticmethod
     def serialize_mid(mid_list: Dict[int, 'Mid'], file_path: str) -> None:
-        serialized: List[Tuple[int, float, float, float, List[int]]] = []
+        serialized: List[Tuple[int, float, float, List[int]]] = []
         for mid in mid_list:
-            serialized.append((mid, mid_list[mid].s1, mid_list[mid].s1_bias, mid_list[mid].s2, mid_list[mid].video_aids))
+            serialized.append((mid, mid_list[mid].s1+mid_list[mid].s1_bias, mid_list[mid].s2, mid_list[mid].video_aids))
         marshal.dump(serialized, open(file_path, "wb"))
     @staticmethod
     def deserialize_mid(file_path: str) -> Dict[int, 'Mid']:
-        serialized: List[Tuple[int, float, float, float, List[int]]] = marshal.load(open(file_path, "rb"))
+        serialized: List[Tuple[int, float, float, List[int]]] = marshal.load(open(file_path, "rb"))
         mid_list: Dict[int, Mid] = {}
         for pack in serialized:
-            if len(pack)==5:
-                mid, s1, s1_bias, s2, video_aids = pack
-            elif len(pack)==4:
-                mid, s1, s2, video_aids = pack # type: ignore
-                s1_bias = 1
+            # if len(pack)==5:
+            #     mid, s1, s1_bias, s2, video_aids = pack
+            # elif len(pack)==4:
+            mid, s1, s2, video_aids = pack
+            #     s1_bias = 1
             mid_list[mid] = Mid(mid)
             mid_list[mid].s1 = s1
-            mid_list[mid].s1_bias = s1_bias
             mid_list[mid].s2 = s2
             mid_list[mid].video_aids = video_aids
         return mid_list

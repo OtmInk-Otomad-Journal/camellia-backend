@@ -9,7 +9,7 @@ import shutil
 from collections import defaultdict
 from typing import List, Tuple, Dict, Set
 
-from config import base_path, weight_path, weight_new_comp, pull_video_copyright, video_zones, delta_days, range_days, recursive_times, update_s2
+from config import base_path, weight_path, weight_new_comp, pull_video_copyright, video_zones, delta_days, range_days, recursive_times
 from config import tag_whitelist, tag_whitezone, prefilter_comment_less_than, main_end, side_end
 from config import pull_full_list_stat, sleep_inteval, cookie_file_path
 logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s')
@@ -42,6 +42,15 @@ comment_dir = os.path.join(data_path, "comment")
 os.makedirs(stat_dir, exist_ok=True)
 os.makedirs(info_dir, exist_ok=True)
 os.makedirs(comment_dir, exist_ok=True)
+
+target_good_keyword_first: Set[str] = set([kw[0] for kw in target_good_keyword])
+target_bad_keyword_first: Set[str] = set([kw[0] for kw in target_bad_keyword])
+target_good_keyword_first_map: Dict[str, List[str]] = defaultdict(list)
+target_bad_keyword_first_map: Dict[str, List[str]] = defaultdict(list)
+for kw in target_good_keyword:
+    target_good_keyword_first_map[kw[0]].append(kw)
+for kw in target_bad_keyword:
+    target_bad_keyword_first_map[kw[0]].append(kw)
 
 ####################### 拉取数据 #########################
 all_video_info: Dict[int, Dict] = {}
@@ -122,6 +131,7 @@ all_mid_s2_median = calc_median(mid_s2_list)
 #     if mid.s1>10: print("s1 = %7.2f, s2 = %4.2f, mid=%10i, name = %s" % (mid.s1, mid.s1, mid.mid, mid.name,))
 
 aid_to_comment: Dict[int, List[Dict]] = defaultdict(list)
+to_be_update_aid: List[int] = [] # 需要更新权重的 aid
 s2_unit = 0.0003183094617716277 # math.atan(0.002) / (math.pi*2)
 for aid, video_info in all_video_info.items():
     comment_file_path = os.path.join(comment_dir, video_info['pubdate'][:10], f"{aid}.json")
@@ -138,22 +148,13 @@ for aid, video_info in all_video_info.items():
         all_mid_list[video_mid] = Mid(video_mid)
     if aid not in all_mid_list[video_mid].video_aids:
         all_mid_list[video_mid].add_video_aid(aid)
-    
-    if update_s2:
+        to_be_update_aid.append(aid)
         for comment in aid_to_comment.get(aid, []):
             if (comment_mid:=comment["mid"]) not in all_mid_list:
                 all_mid_list[comment_mid] = Mid(comment_mid)
             all_mid_list[comment["mid"]].s2 += s2_unit
 
 logging.info("计算视频得分")
-target_good_keyword_first: Set[str] = set([kw[0] for kw in target_good_keyword])
-target_bad_keyword_first: Set[str] = set([kw[0] for kw in target_bad_keyword])
-target_good_keyword_first_map: Dict[str, List[str]] = defaultdict(list)
-target_bad_keyword_first_map: Dict[str, List[str]] = defaultdict(list)
-for kw in target_good_keyword:
-    target_good_keyword_first_map[kw[0]].append(kw)
-for kw in target_bad_keyword:
-    target_bad_keyword_first_map[kw[0]].append(kw)
     
 # aid_to_score: Dict[int, float] = {}
 aid_to_score_norm: Dict[int, float] = {}
@@ -167,11 +168,10 @@ for index in range(recursive_times):
             all_mid_list, s2_base=all_mid_s2_median)
         aid_to_score_norm[video_aid] = video_score_norm
     if index == recursive_times-1: break
+    
     for mid in all_mid_list:
         mid_info = all_mid_list[mid]
-        mid_score = 0
-        for aid in mid_info.video_aids:
-            mid_score += aid_to_score_norm.get(aid, 0)
+        mid_score = sum([aid_to_score_norm.get(aid, 0) for aid in mid_info.video_aids if aid in to_be_update_aid])
         mid_info.s1_bias = mid_score
 logging.info("计分完成")
 

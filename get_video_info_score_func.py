@@ -244,7 +244,9 @@ def calc_aid_score(video_info: Dict, comment_list: Optional[List[Dict]],
         multiply_value = 1 * (2 if hit_good_key_words else 1) * (0.5 if hit_bad_key_words else 1)
         comment_score_summary[comment_mid.mid].append(comment_score * multiply_value)
     
-    aid_score = sum([sum(v) for k,v in comment_score_summary.items()])
+    # aid_score = sum([calc_median(v)*math.sqrt(len(v)) for k,v in comment_score_summary.items()])
+    aid_score = sum([sum(v) for k,v in comment_score_summary.items()]) # 不抑制重复评论的算法
+    
     aid_favorite = video_info['favorites']
     # aid_score /= math.log2(len(comment_list)+2)
     aid_score_norm = math.sqrt(aid_score * math.log10(aid_favorite/10+1))
