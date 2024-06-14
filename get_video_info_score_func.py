@@ -98,7 +98,7 @@ def get_all_tags(vid_list: Dict):
         pbar.update(1)
     return vid_list
 
-def get_tags(aid: int,sleep_inteval=0.1):
+def get_tags(aid: int,sleep_inteval=0.3):
     headers = {
         'accept': '*/*',
         # 'Cookie': raw_cookie, # using cookie may lessen the prob that being blocked
