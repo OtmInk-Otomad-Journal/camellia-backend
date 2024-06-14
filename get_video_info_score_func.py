@@ -13,7 +13,7 @@ from collections import defaultdict
 logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s')
 ignored_debug_lib = ["requests", "urllib3", "asyncio", "httpx", "httpcore"]
 for lib in ignored_debug_lib: logging.getLogger(lib).setLevel(logging.WARNING)
-
+from tqdm import tqdm
 # pip install bilibili_api_python
 from bilibili_api import comment, sync, video
 from bilibili_api import Credential
@@ -45,6 +45,106 @@ def get_page_count(video_zone: int) -> int:
     if result["code"] == 0:
         return result["data"]["page"]["count"]
     return -1
+
+## 介于 B 站获取视频列表的 API 不稳定，这是补救获取措施。
+## 获取最末 pn 值。
+def get_info_last_pn(video_zone: int, time_from: str, ps=50, sleep_inteval=0.1):
+    headers = {
+        'accept': '*/*',
+        # 'Cookie': raw_cookie, # using cookie may lessen the prob that being blocked
+        'referer': 'https://www.bilibili.com/v/kichiku/mad/', # 我不知道在请求其他分区时，填上不正确的 referer 会有什么影响
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41'
+    }
+
+    time_from_stamp = int(datetime.datetime.strptime(time_from,"%Y%m%d").timestamp())
+
+    # 二分法
+    st_num = 1
+    while(True):
+        time.sleep(sleep_inteval)
+        page_index = st_num
+        url = f"https://api.bilibili.com/x/web-interface/newlist?rid={video_zone}&pn={page_index}&ps={ps}"
+        _, data = apply_response_getter(url, headers)
+        video_list: List[Dict[str, Any]] = data["archives"]
+        if not video_list:
+            return 0
+        if video_list[-1]["pubdate"] > time_from_stamp:
+            st_num += 10
+        else:
+            break
+    ed_num = st_num
+    st_num = 0
+    gap = ed_num - st_num
+    while(gap > 1):
+        time.sleep(sleep_inteval)
+        page_index = int(st_num + gap / 2)
+        url = f"https://api.bilibili.com/x/web-interface/newlist?rid={video_zone}&pn={page_index}&ps={ps}"
+        _, data = apply_response_getter(url, headers)
+        video_list: List[Dict[str, Any]] = data["archives"]
+        if not video_list:
+            return 0
+        if video_list[-1]["pubdate"] > time_from_stamp:
+            st_num = page_index
+        else:
+            ed_num = page_index
+        gap = ed_num - st_num
+    return ed_num
+
+def get_all_tags(vid_list: Dict):
+    pbar = tqdm(total=len(vid_list))
+    for _, irt in enumerate(vid_list):
+        tags = get_tags(irt)
+        vid_list[irt].update({"tag": tags})
+        pbar.update(1)
+    return vid_list
+
+def get_tags(aid: int,sleep_inteval=0.1):
+    headers = {
+        'accept': '*/*',
+        # 'Cookie': raw_cookie, # using cookie may lessen the prob that being blocked
+        'referer': 'https://www.bilibili.com/v/kichiku/mad/', # 我不知道在请求其他分区时，填上不正确的 referer 会有什么影响
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41'
+    }
+
+    url = f"https://api.bilibili.com/x/tag/archive/tags?aid={aid}"
+    _, data = apply_response_getter(url, headers)
+    time.sleep(sleep_inteval)
+    tags = []
+    for tag in data:
+        tags.append(tag["tag_name"])
+    return tags
+
+def get_info_by_time_fix(page_index: int, video_zone: int, time_from: str, time_to: str, ps=50, copyright="-1"):
+    headers = {
+        'accept': '*/*',
+        # 'Cookie': raw_cookie, # using cookie may lessen the prob that being blocked
+        'referer': 'https://www.bilibili.com/v/kichiku/mad/', # 我不知道在请求其他分区时，填上不正确的 referer 会有什么影响
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.5005.124 Safari/537.36 Edg/102.0.1245.41'
+    }
+    url = f"https://api.bilibili.com/x/web-interface/newlist?rid={video_zone}&pn={page_index}&ps={ps}"
+
+    endrule = False
+    time_from_stamp = int(datetime.datetime.strptime(time_from,"%Y%m%d").timestamp())
+    time_to_stamp = int((datetime.datetime.strptime(time_to,"%Y%m%d") + datetime.timedelta(days=1)).timestamp())
+    
+    _, data = apply_response_getter(url, headers)
+    video_list: List[Dict[str, Any]] = data["archives"]
+    if not video_list:
+        return [], 0
+    video_list_filter = []
+    for i, video in enumerate(video_list):
+        if video["pubdate"] > time_to_stamp:
+            endrule = True
+            continue
+        if video["pubdate"] < time_from_stamp:
+            continue
+        video['get_time'] = int(datetime.datetime.now().timestamp())
+        video['tid'] = video_zone
+        video['id'] = video['aid']
+        video["review"] = video["stat"]["reply"]
+        video["pubdate"] = datetime.datetime.fromtimestamp(video["pubdate"]).strftime("%Y-%m-%d HH:MM:SS")
+        video_list_filter.append(video)
+    return video_list_filter , endrule
 
 def get_info_by_time(page_index: int, video_zone: int, time_from: str, time_to: str, ps=50, copyright="-1"):
     """

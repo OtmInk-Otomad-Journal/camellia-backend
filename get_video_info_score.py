@@ -14,7 +14,7 @@ from config import tag_whitelist, tag_whitezone, prefilter_comment_less_than, ma
 from config import pull_full_list_stat, sleep_inteval, cookie_file_path
 logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s')
 
-from get_video_info_score_func import calc_median, get_info_by_time, get_credential_from_path, retrieve_video_comment, calc_aid_score, retrieve_video_stat, print_aid_info
+from get_video_info_score_func import calc_median, get_info_by_time, get_credential_from_path, retrieve_video_comment, calc_aid_score, retrieve_video_stat, print_aid_info , get_info_last_pn , get_info_by_time_fix , get_all_tags
 from get_video_info_score_struct import DateYield, Mid
 
 # 其实这些关键词的影响并不大
@@ -67,20 +67,38 @@ for video_zone in video_zones:
             with open(info_package_file_path, "r", encoding="utf-8") as f:
                 video_info_in_zone.update(json.load(f))
             continue
-        info_page, num_pages = get_info_by_time(
-            1, video_zone, src_date_str, dst_date_str,
-            copyright=str(pull_video_copyright))
-        logging.info(f"取得分区 {video_zone} ({src_date_str}~{dst_date_str} 部分) 的第 1 页，共 {num_pages} 页")
-        video_info_in_zone_in_time.update({i['id']:i for i in info_page})
-        # 如果页数正向遍历，那么一旦有视频被删除，列表上之后的视频会向前挪动
-        # 跨页挪动的视频就会被漏掉，所以反向遍历
-        for page_index in range(num_pages, 1, -1):
-            time.sleep(sleep_inteval + random.random())
-            info_page, _ = get_info_by_time(
-                page_index, video_zone, src_date_str, dst_date_str,
-                copyright=str(pull_video_copyright))
-            video_info_in_zone_in_time.update({i['id']:i for i in info_page})
-            logging.info(f"第 {page_index} 页完成")
+
+        # info_page, num_pages = get_info_by_time(
+        #     1, video_zone, src_date_str, dst_date_str,
+        #     copyright=str(pull_video_copyright))
+        # logging.info(f"取得分区 {video_zone} ({src_date_str}~{dst_date_str} 部分) 的第 1 页，共 {num_pages} 页")
+        # video_info_in_zone_in_time.update({i['id']:i for i in info_page})
+        # # 如果页数正向遍历，那么一旦有视频被删除，列表上之后的视频会向前挪动
+        # # 跨页挪动的视频就会被漏掉，所以反向遍历
+        # for page_index in range(num_pages, 1, -1):
+        #     time.sleep(sleep_inteval + random.random())
+        #     info_page, _ = get_info_by_time(
+        #         page_index, video_zone, src_date_str, dst_date_str,
+        #         copyright=str(pull_video_copyright))
+        #     video_info_in_zone_in_time.update({i['id']:i for i in info_page})
+        #     logging.info(f"第 {page_index} 页完成")
+
+        ## 由于 API 的更改，导致无论如何都会有丢失视频的风险。此时只能采用多次获取方式避免遗漏。
+        for collect_num in range(3): # 获取三次。
+            logging.info(f"第 {collect_num + 1} 次获取数据")
+            lst_pn = get_info_last_pn(video_zone, src_date_str)
+            logging.info(f"获取到最末页为 {lst_pn}")
+            for page_index in range(lst_pn, 1, -1):
+                time.sleep(sleep_inteval + random.random())
+                info_page, end_fil = get_info_by_time_fix(
+                    page_index, video_zone, src_date_str, dst_date_str,
+                    copyright=str(pull_video_copyright))
+                video_info_in_zone_in_time.update({i['aid']:i for i in info_page})
+                logging.info(f"第 {page_index} 页完成")
+                if(end_fil):
+                    logging.info(f"已达获取最末日期，停止获取。")
+                    break
+
         with open(info_package_file_path, "w", encoding="utf-8") as f:
             json.dump(video_info_in_zone_in_time, f, ensure_ascii=False, indent=4)
         video_info_in_zone.update(video_info_in_zone_in_time)
@@ -88,12 +106,19 @@ for video_zone in video_zones:
 
 logging.info(f"视频信息获取完成，视频总数: {len(all_video_info)}")
 
-whitelist_filter = lambda video_info: (video_info['tid'] in tag_whitezone) or (len(set(video_info["tag"]).intersection(tag_whitelist))>0)
-all_video_info = {int(k):v for k,v in all_video_info.items() if whitelist_filter(v)}
-logging.info("按白名单过滤后，待拉取视频数: " + str(len(all_video_info)))
+
+# 评论和tag检测的顺序对调了下。
+
 comment_count_filter = lambda video_info: (video_info["review"] >= prefilter_comment_less_than)
 all_video_info = {k:v for k,v in all_video_info.items() if comment_count_filter(v)}
 logging.info("按评论数过滤后，待拉取视频数: " + str(len(all_video_info)))
+
+all_video_info = get_all_tags(all_video_info)
+
+whitelist_filter = lambda video_info: (video_info['tid'] in tag_whitezone) or (len(set(video_info["tag"]).intersection(tag_whitelist))>0)
+all_video_info = {int(k):v for k,v in all_video_info.items() if whitelist_filter(v)}
+logging.info("按白名单过滤后，待拉取视频数: " + str(len(all_video_info)))
+
 
 credential = get_credential_from_path(cookie_file_path)
 cookie_raw = open(cookie_file_path, "r", encoding="utf-8").read()
