@@ -142,7 +142,11 @@ def get_info_by_time_fix(page_index: int, video_zone: int, time_from: str, time_
         video['tid'] = video_zone
         video['id'] = video['aid']
         video["review"] = video["stat"]["reply"]
-        video["pubdate"] = datetime.datetime.fromtimestamp(video["pubdate"]).strftime("%Y-%m-%d HH:MM:SS")
+        video["pubdate"] = datetime.datetime.fromtimestamp(video["pubdate"]).strftime("%Y-%m-%d %H:%M:%S")
+        video['mid'] = video['owner']['mid']
+        video["author"] = video["owner"]['name']
+        video['favorites'] = video["stat"]["favorite"]
+        video['play'] = video["stat"]["view"]
         video_list_filter.append(video)
     return video_list_filter , endrule
 
