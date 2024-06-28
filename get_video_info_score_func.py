@@ -150,7 +150,7 @@ def get_info_by_time_fix(page_index: int, video_zone: int, time_from: str, time_
         video_list_filter.append(video)
     return video_list_filter , endrule
 
-def get_info_by_time(page_index: int, video_zone: int, time_from: str, time_to: str, ps=50, copyright="-1"):
+def get_info_by_time(page_index: int, video_zone: int, time_from: str, time_to: str, ps=50, copyright="-1", sleep_inteval=3.):
     """
     :param time_from: 起始日期, 格式: yyyymmdd, 如: 20230701, 指此日期的 00:00 为始
     :param time_to:   结束日期, 格式: yyyymmdd, 如: 20230701, 指此日期的 23:59 为止
@@ -165,10 +165,18 @@ def get_info_by_time(page_index: int, video_zone: int, time_from: str, time_to: 
     }
     url = f"https://api.bilibili.com/x/web-interface/newlist_rank?search_type=video&view_type=hot_rank&cate_id={video_zone}&page={page_index}&pagesize={ps}&time_from={time_from}&time_to={time_to}&copy_right={copyright}"
 
-    _, data = apply_response_getter(url, headers)
-    video_list: List[Dict[str, Any]] = data["result"]
+    # API 不稳定而需要多次尝试。
+    api_try_times = 0
+    while(api_try_times < 10):
+        _, data = apply_response_getter(url, headers)
+        video_list: List[Dict[str, Any]] = data["result"]
+        if not video_list:
+            api_try_times += 1
+            logging.info(f"{video_zone} 分区的第 {api_try_times} 次重试")
+            time.sleep(sleep_inteval)
     if not video_list:
         return [], 0
+
     for i, video in enumerate(video_list):
         video.pop("arcrank" , None)
         video.pop("is_pay"  , None)
