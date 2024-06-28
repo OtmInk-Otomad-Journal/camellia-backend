@@ -174,6 +174,8 @@ def get_info_by_time(page_index: int, video_zone: int, time_from: str, time_to: 
             api_try_times += 1
             logging.info(f"{video_zone} 分区的第 {api_try_times} 次重试")
             time.sleep(sleep_inteval)
+        else:
+            break
     if not video_list:
         return [], 0
 
