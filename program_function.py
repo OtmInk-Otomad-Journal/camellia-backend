@@ -69,9 +69,13 @@ def get_video(aid,part = 1,cid = None):
             subprocess.Popen(command + ["-o","./video","-O",str(aid),f"av{aid}{p_src}"]).wait()
         # 备用 yt-dlp
         if d_time > 5:
+            logging.info(f"改用 yt-dlp，第 {d_time} 次下载 av{aid} 视频...")
             yt_opt = { "outtmpl": f"./video/{aid}.%(ext)s"}
-            with yt_dlp.YoutubeDL(yt_opt) as ydl:
-                ydl.download([f"https://www.bilibili.com/video/av{aid}"])    
+            try:
+                with yt_dlp.YoutubeDL(yt_opt) as ydl:
+                    ydl.download([f"https://www.bilibili.com/video/av{aid}"])
+            except:
+                pass
     if d_time != 0:
         any_to_avc(f"./video/{aid}.mp4")
     logging.info(f"av{aid} 视频下载完成")
