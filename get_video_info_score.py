@@ -12,7 +12,7 @@ from typing import List, Tuple, Dict, Set
 from config import base_path, weight_path, weight_new_comp, pull_video_copyright, video_zones, delta_days, range_days, recursive_times
 from config import tag_whitelist, tag_whitezone, prefilter_comment_less_than, main_end, side_end
 from config import pull_full_list_stat, sleep_inteval, cookie_file_path
-logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s@%(funcName)s: %(message)s', encoding="utf-8")
 
 from get_video_info_score_func import calc_median, get_info_by_time, get_credential_from_path, retrieve_video_comment, calc_aid_score, retrieve_video_stat, print_aid_info , get_info_last_pn , get_info_by_time_fix , get_all_tags
 from get_video_info_score_struct import DateYield, Mid

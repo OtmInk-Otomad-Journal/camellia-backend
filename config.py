@@ -117,3 +117,5 @@ sequence_num_width = 6 # 序列渲染编号最大位数
 
 web_prefix = "http://localhost:7213/" # 用于网页渲染的本地文件获取地址
 render_prefix = "http://localhost:7214" # 用于网页渲染的在线模板端
+panel_prefix = {"address":"0.0.0.0",
+                "port": 7215} # 用于面板管理的地址
