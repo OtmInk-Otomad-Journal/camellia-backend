@@ -13,7 +13,7 @@ from config import *
 import numpy as np
 from haishoku.haishoku import Haishoku
 
-import yt_dlp
+# import yt_dlp
 
 def get_img(aid):
     video_data = requests.get(url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}",headers=api_header).json()
@@ -182,7 +182,7 @@ def std_judge(rgb):
     return std
 
 def check_dir():
-    dirpaths = ["avatar","cover","data",
+    dirpaths = ["avatar","cover","data","data/backup"
             "fast_view","log","option",
             "output","output/clip","output/final",
             "video","videoc","audio","cookies","temp","option/ads","danmaku","driver"]

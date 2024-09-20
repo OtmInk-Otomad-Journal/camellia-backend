@@ -1,13 +1,21 @@
+import datetime
+from io import BytesIO
+import json
 from pathlib import Path
 import time
 import logging
 import ctypes
 import inspect
 import threading
-from fastapi import APIRouter, FastAPI
+import csv
+import os
+import shutil
+from fastapi import APIRouter, FastAPI, Body, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+
+from program_function import convert_csv, turnAid
 
 from config import panel_prefix
 
@@ -92,6 +100,74 @@ async def stop_get_data():
         if props[0] == 'advanced_data_get':
             stop_thread(prog)
     return { "code": 0, "msg": None, "data": None }
+
+@router.get("/backend/pull-data")
+async def pull_data():
+    """
+    获取已经存在的 data.csv 文件，以 JSON 返回
+    """
+    return { "code": 0, "msg": None, "data": convert_csv("data/data.csv") }
+
+@router.post("/backend/save-data")
+async def save_data(data: list[dict] = Body(...)):
+    """
+    保存 data.csv 文件，并将原始版本重命名
+    """
+    try:
+        if os.path.exists("data/data.csv"):
+            shutil.move("data/data.csv",f"data/backup/data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv")
+        with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
+            co_header = data[0].keys()
+            writer = csv.DictWriter(csvfile, co_header)
+            writer.writeheader()
+            writer.writerows(data)
+        return { "code": 0, "msg": None, "data": {} }
+    except:
+        return { "code": -1, "msg": "未知错误", "data": {} }
+
+@router.post("/backend/upload-pickup")
+async def upload_pickup(file: UploadFile = File(...)):
+    """
+    上传 Pick Up 数据，并保存为 pick.csv
+    """
+    contents = await file.read()
+    data = contents.decode("utf-8-sig")
+    with open("data/pick.csv","w",encoding="utf-8-sig",newline="") as file:
+        file.write(data)
+
+@router.get("/backend/pull-pickup-data")
+async def pull_data():
+    """
+    获取已经存在的 pick.csv 文件，根据时间范围限制返回量，以 JSON 返回
+    """
+    from config import activity_list
+
+    min_time = datetime.datetime.today() + datetime.timedelta(days=-8)
+    pickList = []
+    with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
+        listed = csv.DictReader(csvfile)
+        for item in listed:
+            time = item["提交时间（自动）"]
+            realtime = datetime.datetime.strptime(time,"%Y/%m/%d %H:%M:%S")
+            if realtime < min_time:
+                continue
+            aid = turnAid(str(item["推荐作品 av 号 / BV 号（必填）"]))
+            text = item["推荐理由（必填）"]
+            picker = item["推荐人"]
+            if picker == "":
+                picker = "神秘人"
+            if item["您的备注"] in activity_list: # 活动特别识别
+                act = item["您的备注"]
+            else:
+                act = ""
+            pickList.append({
+                "status": True,
+                "aid": aid,
+                "reason": text,
+                "picker": picker,
+                "activity": act
+            })
+    return { "code": 0, "msg": None, "data": pickList }
 
 app.include_router(router)
 
