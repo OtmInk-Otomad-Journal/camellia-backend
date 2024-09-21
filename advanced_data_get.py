@@ -126,6 +126,7 @@ def advanced_data_get():
             vid.update(after_dict)
             ranked_list.append(vid)
         writer.writerows(ranked_list)
+    logging.info('周刊数据获取已全部完成！')
 
 if __name__ == '__main__':
     advanced_data_get()

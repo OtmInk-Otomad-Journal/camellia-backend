@@ -69,8 +69,5 @@ def main_pick_filter():
 
     os.system("python advanced_resource_get.py")
 
-def pick_filter():
-    ...
-
 if __name__ == '__main__':
     main_pick_filter()

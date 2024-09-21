@@ -2,6 +2,10 @@ import time
 import os
 import threading
 import datetime
+import yaml
+
+with open("./config/data.yaml","r") as conf_file:
+    conf = yaml.safe_load(conf_file)
 
 if os.path.exists("./time.txt"):
     usedTime = str(open("./time.txt","r").read())
@@ -41,13 +45,13 @@ recursive_times = 4             # 更新权重时的迭代次数；1 代表不�
 
 # 音 MAD: 26; 人力: 126; 鬼调: 22；不要用大分区，如 "119" (鬼畜)
 # 见 https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/video/video_zone.md
-video_zones = [26, 126, 22]     # 拉取这些分区的视频列表
-tag_whitezone = [26]            # 仅统计此分区，以及
-tag_whitelist = ['音mad', "ytpmv"] # 含有这些 tag 的视频, 西文使用全小写
+video_zones = conf["video_zones"]     # 拉取这些分区的视频列表 # [26, 126, 22]
+tag_whitezone = conf["tag_whitezone"] # 仅统计此分区，以及 # 26
+tag_whitelist = conf["tag_whitelist"] # 含有这些 tag 的视频, 西文使用全小写 # ['音mad', "ytpmv"]
 pull_video_copyright = -1       # 1: 仅自制, 0: 仅转载, -1: 全部
 
 prefilter_comment_less_than = range_days**(1/2) # 评论大于此数的视频才会被拉取评论
-pull_full_list_stat = 100       # 拉取前 pull_full_list_stat 个视频的点赞、硬币…数据, -1 为全部
+pull_full_list_stat = conf["pull_full_list_stat"]       # 拉取前 pull_full_list_stat 个视频的点赞、硬币…数据, -1 为全部 # 100
 
 # !Important! 拉取完整评论*可能*需登录, 见 config_login.py
 # 或者使用下面的 cookie 文件
@@ -58,14 +62,14 @@ main_max_title = 30
 side_max_title = 23
 pick_max_reason = 32
 pick_max_box = 640
-sep_time = 20 # 间隔时间
-main_end = 15 # 主榜个数
-side_end = 40 # 副榜个数
+sep_time = conf["sep_time"] # 间隔时间 # 20
+main_end = conf["main_end"] # 主榜个数 # 15
+side_end = conf["side_end"] # 副榜个数 # 40
 side_count = 4 # 副榜显示
 staticFormat = ["png","jpg","jpeg"]
 side_duration = side_end * 1.5
 
-max_main_duration = 70 # 主榜第一最长时长
+max_main_duration = conf["max_main_duration"] # 主榜第一最长时长 70
 
 screen_size = (1920,1080)
 fps = 60
@@ -74,7 +78,7 @@ screenRatio = 16 / 9
 
 main_to_side_offset = -1
 
-insert_count = 5 # 主榜中断个数
+insert_count = conf["insert_count"] # 主榜中断个数 # 5
 
 vcodec = "libx264"
 

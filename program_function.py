@@ -182,7 +182,8 @@ def std_judge(rgb):
     return std
 
 def check_dir():
-    dirpaths = ["avatar","cover","data","data/backup"
+    dirpaths = ["avatar","cover","cover/calendar",
+            "data","data/backup","config",
             "fast_view","log","option",
             "output","output/clip","output/final",
             "video","videoc","audio","cookies","temp","option/ads","danmaku","driver"]

@@ -1,0 +1,18 @@
+insert_count: 5
+main_end: 15
+max_main_duration: 70
+pull_full_list_stat: 100
+sep_time: 20
+side_end: 40
+tag_whitelist:
+- "\u97F3mad"
+- ytpmv
+tag_whitezone:
+- 26
+time_range:
+- '2024-09-14T16:00:00.000Z'
+- '2024-09-20T16:00:00.000Z'
+video_zones:
+- 26
+- 126
+- 22
