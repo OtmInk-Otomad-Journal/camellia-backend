@@ -3,6 +3,9 @@ import os
 import threading
 import datetime
 import yaml
+import pytz
+
+from dateutil.parser import isoparse
 
 with open("./config/data.yaml","r") as conf_file:
     conf = yaml.safe_load(conf_file)
@@ -38,6 +41,13 @@ if selected_day != "":
     select = datetime.datetime.strptime(selected_day,"%y%m%d")
     delta_days = (datetime.datetime.now() - select).days + range_days - 1
 
+# 由面板控制时间范围
+timezone = pytz.timezone("Asia/Shanghai") # 本地时区
+if(len(conf["time_range"]) != 0 and len(selected_day) == 0):
+    end_day = isoparse(conf["time_range"][1]).astimezone(timezone)
+    start_day = isoparse(conf["time_range"][0]).astimezone(timezone)
+    range_days = (end_day - start_day).days + 1
+    delta_days = (datetime.datetime.now(tz=timezone) - end_day).days + range_days - 1
 
 weight_path = "./weight/"       # 用户评论权重
 weight_new_comp = 1.            # 新权重的权重，0 代表完全使用旧权重，1 代表完全使用新权重

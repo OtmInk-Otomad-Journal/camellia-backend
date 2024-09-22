@@ -19,7 +19,7 @@ from pydantic import BaseModel
 from PIL import Image
 import hashlib
 
-from program_function import convert_csv, turnAid
+from program_function import convert_csv, turnAid, intilize_dict
 
 from config import panel_prefix
 
@@ -72,16 +72,16 @@ def log_stream(log_time):
                 yield f"data: {line}\n\n"
 
 @router.get("/backend/get-data-config")
-async def get_pickup_config():
+async def get_data_config():
     """
     获取周刊数据配置，以 JSON 返回
     """
-    with open("./config/calendar.yaml","r") as conf_file:
+    with open("./config/data.yaml","r") as conf_file:
         conf = yaml.safe_load(conf_file)
-    return { "code": 0, "msg": None, "data": {conf} }
+    return { "code": 0, "msg": None, "data": conf }
 
 @router.post("/backend/save-data-config")
-async def get_pickup_config(data: dict = Body(...)):
+async def save_data_config(data: dict = Body(...)):
     """
     上传周刊数据配置
     """
@@ -91,6 +91,7 @@ async def get_pickup_config(data: dict = Body(...)):
             conf = data
         else:
             conf.update(data)
+        conf = intilize_dict(conf)
     with open("./config/data.yaml","w") as conf_file:
         conf_file.write(yaml.dump(conf))
 
@@ -361,16 +362,16 @@ async def upload_pickup_config(data: dict = Body(...)):
     return { "code": 0, "msg": None, "data": {} }
 
 @router.get("/backend/get-calendar-config")
-async def get_pickup_config():
+async def get_calendar_config():
     """
     获取小日历配置，以 JSON 返回
     """
     with open("./config/calendar.yaml","r") as conf_file:
         conf = yaml.safe_load(conf_file)
-    return { "code": 0, "msg": None, "data": {conf} }
+    return { "code": 0, "msg": None, "data": conf }
 
 @router.post("/backend/upload-calendar-music")
-async def upload_pickup_config(file: UploadFile = File(...)):
+async def upload_calendar_music(file: UploadFile = File(...)):
     """
     上传小日历音乐
     """

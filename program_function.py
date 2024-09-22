@@ -35,7 +35,10 @@ def get_img(aid):
         }
     return callback
 
-def turnAid(id):
+def turnAid(id: str) -> str:
+    '''
+    将 BV 号亦或 av 号统一转为不带「av」前缀的 av 号，返回字符串
+    '''
     if ("av" in id) or ("AV" in id):
         return id[2:]
     elif ("BV" in id):
@@ -182,6 +185,9 @@ def std_judge(rgb):
     return std
 
 def check_dir():
+    '''
+    检查文件夹是否齐全，否则就新建
+    '''
     dirpaths = ["avatar","cover","cover/calendar",
             "data","data/backup","config",
             "fast_view","log","option",
@@ -213,13 +219,18 @@ def check_env():
     assert os.path.exists("./driver/chromedriver.exe") , "./driver/ 缺失 chromedriver.exe 驱动程序"
 
 def html_unescape(dict):
+    '''
+    将字典里的值全部逃离 HTML 化
+    '''
     out_dict = {}
     for key,value in dict.items():
         out_dict.update({ key: html.unescape(str(value)) })
     return out_dict
 
-# 音频处理
 def audio_process(aid,start_time = 0,duration = 10000,audio = None):
+    '''
+    音频处理
+    '''
     if(audio != None):
         sound = pydub.AudioSegment.from_file(audio)
         sound = sound[int(start_time):int(start_time+duration)] # 切片
@@ -231,7 +242,7 @@ def audio_process(aid,start_time = 0,duration = 10000,audio = None):
     sound = sound.apply_gain(-sound.max_dBFS) # 响度标准化
 
     ## 已经弃用的功能
-    
+
     # 判断分组极差，判断压缩
     # chunks = pydub.utils.make_chunks(sound[int(duration/4):int(duration*3/4)],100) # 排除首末可能存在的判断失误
     # clup = int((duration/4 - duration*3/4) // 100)
@@ -250,8 +261,10 @@ def audio_process(aid,start_time = 0,duration = 10000,audio = None):
                 bitrate="320k")
     return f"./audio/{aid}.mp3"
 
-# 裁剪视频并规格化尺寸。
 def video_cut(aid,start_time = 0,duration = 10):
+    '''
+    裁剪视频并规格化尺寸。
+    '''
     videoSourceSize = ffmpeg.probe(f"./video/{aid}.mp4")["streams"][0]
     videoRatio = videoSourceSize["width"] / videoSourceSize["height"]
     # 因为时长有波动，必须使用原生 ffmpeg。
@@ -267,3 +280,34 @@ def video_cut(aid,start_time = 0,duration = 10):
     if not os.path.exists(f"./videoc/{aid}.mp4"):
         subprocess.Popen(command).wait()
     return f"./videoc/{aid}.mp4"
+
+def intilize_dict(given_dict: dict) -> dict:
+    '''
+    将字典中可转化整形的字符串全部转为整形
+    '''
+    def _loop_convert(item: dict):
+        for key, value in item.items():
+            if isinstance(value,dict):
+                value = _loop_convert(value)
+            if isinstance(value,list):
+                value = _loop_convert_list(value)
+            if isinstance(value,str):
+                if value.isdigit():
+                    value = int(value)
+            item.update({key: value})
+        return item
+
+    def _loop_convert_list(item: list):
+        new_item = []
+        for value in item:
+            if isinstance(value,dict):
+                value = _loop_convert(value)
+            if isinstance(value,list):
+                value = _loop_convert_list(value)
+            if isinstance(value,str):
+                if value.isdigit():
+                    value = int(value)
+            new_item.append(value)
+        return new_item
+
+    return _loop_convert(given_dict)
