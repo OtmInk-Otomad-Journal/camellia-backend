@@ -21,11 +21,13 @@ from pydantic import BaseModel
 from PIL import Image
 import hashlib
 
-from program_function import convert_csv, turnAid, intilize_dict
+from program_function import convert_csv, turnAid, intilize_dict, check_dir
 
 import config
 
 from config import panel_prefix
+
+check_dir()
 
 def reload_config():
     """
