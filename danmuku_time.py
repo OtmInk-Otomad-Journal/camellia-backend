@@ -1,10 +1,11 @@
 import logging
 import numpy as np
 import math
-from config import *
 from lxml import etree
 
 def danmuku_time(aid,full_time,sep_time,full = False,cid = None):
+    from config import max_main_duration
+
     # 全长度判断
     if full:
         if full_time < sep_time:

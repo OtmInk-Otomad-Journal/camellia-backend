@@ -4,12 +4,13 @@ import tkinter
 import datetime
 import os
 import shutil
-from config import activity_list
 from program_function import turnAid
 
 
 
 def main_pick_filter():
+    from config import activity_list
+
     with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
         listed = csv.DictReader(csvfile)
         min_time = datetime.datetime.today() + datetime.timedelta(days=-8)

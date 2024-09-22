@@ -1,4 +1,5 @@
 import datetime
+import importlib
 from io import BytesIO
 import json
 from pathlib import Path
@@ -10,6 +11,7 @@ import threading
 import csv
 import os
 import shutil
+from typing import Callable
 import yaml
 
 from fastapi import APIRouter, FastAPI, Body, File, UploadFile, Form
@@ -21,7 +23,15 @@ import hashlib
 
 from program_function import convert_csv, turnAid, intilize_dict
 
+import config
+
 from config import panel_prefix
+
+def reload_config():
+    """
+    重载配置
+    """
+    importlib.reload(config)
 
 def _async_raise(tid, exctype):
    """raises the exception, performs cleanup if needed"""
@@ -94,6 +104,8 @@ async def save_data_config(data: dict = Body(...)):
         conf = intilize_dict(conf)
     with open("./config/data.yaml","w") as conf_file:
         conf_file.write(yaml.dump(conf))
+
+    reload_config()
 
     return { "code": 0, "msg": None, "data": {} }
 

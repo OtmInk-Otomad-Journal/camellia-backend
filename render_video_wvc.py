@@ -3,9 +3,10 @@ import hashlib
 import json
 import logging
 from program_function import audio_process,video_cut
-from config import *
 
 def render_video(data,url,audio = None,fast = False):
+    from config import muitl_limit
+
     start_time = data["start_time"]
     full_duration = data["full_time"]
     if not fast:

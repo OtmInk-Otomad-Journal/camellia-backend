@@ -9,12 +9,13 @@ import json
 import hashlib
 from tqdm import tqdm
 from program_function import audio_process
-from config import *
 
 def pack_video(sv,sa,op,rf):
     ffmpeg.output(sv,sa,op,**rf).run()
 
 def render_video(data,url,audio = None,fast = False):
+    from config import render_max_threading_count, fps, screen_size ,sequence_num_width, render_fast_threading_count, slip_second, render_format, muitl_limit
+
     start_time = data["start_time"]
     full_duration = data["full_time"]
     output_file = data["output_src"]

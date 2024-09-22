@@ -2,14 +2,14 @@ import logging
 import os
 import threading
 import yaml
+import time
 
 from all_create import AllVideo
 from program_function import convert_csv , extract_single_column , check_env , check_dir
 from render_video_wvc import render_video
-# 声明变量
-from config import *
 
 def main_progress():
+    from config import render_prefix, web_prefix, main_end, side_end, muitl_limit
     # 日志记录
     logging.basicConfig(format='[%(levelname)s]\t%(message)s',filename="log/" + time.strftime("%Y-%m-%d %H-%M-%S") + '.log', level=logging.INFO)
     formatter = logging.Formatter('[%(levelname)s]\t%(message)s')

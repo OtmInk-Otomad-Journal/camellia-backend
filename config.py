@@ -10,12 +10,7 @@ from dateutil.parser import isoparse
 with open("./config/data.yaml","r") as conf_file:
     conf = yaml.safe_load(conf_file)
 
-if os.path.exists("./time.txt"):
-    usedTime = str(open("./time.txt","r").read())
-else:
-    usedTime = time.strftime("%Y%m%d", time.localtime())
-    with open("./time.txt","w") as f:
-        f.write(usedTime)
+usedTime = time.strftime("%Y%m%d", time.localtime()) # 不再采用存储文本的时间，改为即刻
 
 activity_list = {
     "wc": "每周挑战特殊推荐"

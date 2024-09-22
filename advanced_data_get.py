@@ -1,11 +1,11 @@
-# 日志记录
-from config import *
 import logging
 
 def advanced_data_get():
     """
     获取周刊数据，将生成一个 data.csv 文件
     """
+    from config import main_end, side_end, sep_time, web_prefix
+
     logging.basicConfig(format='[%(levelname)s]\t%(message)s',level=logging.INFO, encoding="utf-8-sig")
     formatter = logging.Formatter('[%(levelname)s]\t%(message)s')
     console_handler = logging.StreamHandler()

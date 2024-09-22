@@ -1,13 +1,15 @@
 import csv
 import logging
+import time
+import os
 from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape , get_danmaku
 from danmuku_time import danmuku_time
 
 from get_video_info_score_func import retrieve_single_video_stat
-# 声明变量
-from config import *
 
 def advanced_resource_get():
+    from config import main_end, side_end, usedTime, sep_time, web_prefix, activity_list
+
     # 获取数据
     ranked_list = convert_csv("./data/data.csv")
     mainArr = extract_single_column(ranked_list,"aid",main_end)

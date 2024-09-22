@@ -7,15 +7,19 @@ import ffmpeg
 import colorsys
 import html
 import pydub
+import os
+import yt_dlp
+
 from io import BytesIO
 from PIL import Image
-from config import *
 import numpy as np
 from haishoku.haishoku import Haishoku
 
 # import yt_dlp
 
 def get_img(aid):
+    from config import api_header
+
     video_data = requests.get(url=f"https://api.bilibili.com/x/web-interface/view?aid={aid}",headers=api_header).json()
     face = video_data["data"]["owner"]["face"]
     cover = video_data["data"]["pic"]
@@ -39,6 +43,8 @@ def turnAid(id: str) -> str:
     '''
     将 BV 号亦或 av 号统一转为不带「av」前缀的 av 号，返回字符串
     '''
+    from config import api_header
+
     if ("av" in id) or ("AV" in id):
         return id[2:]
     elif ("BV" in id):
@@ -86,6 +92,8 @@ def get_video(aid,part = 1,cid = None):
 
 # 弹幕下载
 def get_danmaku(cid,aid = None):
+    from config import api_header
+
     danmaku_content = requests.get(f"https://comment.bilibili.com/{cid}.xml",headers=api_header)
     try_times = 0
     while(danmaku_content.status_code != 200 and try_times <= 10):
@@ -102,6 +110,8 @@ def get_danmaku(cid,aid = None):
 
 # 编码以及码率转换
 def any_to_avc(file):
+    from config import smooth_bit_rate, smooth_render_format
+
     info = ffmpeg.probe(file)['streams'][0]
     format = info['codec_name']
     bit_rate = info['bit_rate']
@@ -265,6 +275,8 @@ def video_cut(aid,start_time = 0,duration = 10):
     '''
     裁剪视频并规格化尺寸。
     '''
+    from config import screenRatio, vcodec
+
     videoSourceSize = ffmpeg.probe(f"./video/{aid}.mp4")["streams"][0]
     videoRatio = videoSourceSize["width"] / videoSourceSize["height"]
     # 因为时长有波动，必须使用原生 ffmpeg。
