@@ -200,7 +200,7 @@ def check_dir():
     '''
     dirpaths = ["avatar","cover","cover/calendar",
             "data","data/backup","config",
-            "fast_view","log","option",
+            "fast_view","log","option","option/calendar",
             "output","output/clip","output/final",
             "video","videoc","audio","cookies","temp","option/ads","danmaku","driver"]
     for dirpath in dirpaths:
