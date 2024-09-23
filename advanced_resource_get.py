@@ -5,9 +5,17 @@ import os
 from program_function import get_img , convert_csv , extract_single_column , get_video , exactVideoLength , calc_color , html_unescape , get_danmaku
 from danmuku_time import danmuku_time
 
+import traceback
+
 from get_video_info_score_func import retrieve_single_video_stat
 
 def advanced_resource_get():
+    try:
+        mainfunc()
+    except Exception as e:
+        logging.exception(traceback.format_exc())
+
+def mainfunc():
     from config import main_end, side_end, usedTime, sep_time, web_prefix, activity_list
 
     # 获取数据
