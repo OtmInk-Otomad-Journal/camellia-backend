@@ -27,7 +27,7 @@ def mainfunc():
     logger = logging.getLogger()
     logger.addHandler(console_handler)
 
-    check_env()
+    # check_env()
     check_dir()
 
     # 获取数据
