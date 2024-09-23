@@ -79,6 +79,7 @@ def log_stream(log_time):
     with open(Path(f"./log/{log_time}.log"), "r", encoding="utf-8-sig") as log_file:
         # log_file.seek(0, 2)
         while True:
+            print("循环日志仍在继续")
             line = log_file.readline()
             if line:
                 yield f"data: {line}\n\n"
