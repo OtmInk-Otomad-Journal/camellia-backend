@@ -149,7 +149,11 @@ async def pull_data():
     """
     获取已经存在的 data.csv 文件，以 JSON 返回
     """
-    return { "code": 0, "msg": None, "data": convert_csv("./data/data.csv") }
+    try:
+        data = convert_csv("./data/data.csv")
+        return { "code": 0, "msg": None, "data": data}
+    except:
+        return { "code": -1, "msg": "未知错误", "data": {}}
 
 @router.post("/backend/save-data")
 async def save_data(data: list[dict] = Body(...)):
@@ -183,34 +187,37 @@ async def pull_data():
     """
     获取已经存在的 pick.csv 文件，根据时间范围限制返回量，以 JSON 返回
     """
-    from config import activity_list
+    try:
+        from config import activity_list
 
-    min_time = datetime.datetime.today() + datetime.timedelta(days=-8)
-    pickList = []
-    with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
-        listed = csv.DictReader(csvfile)
-        for item in listed:
-            time = item["提交时间（自动）"]
-            realtime = datetime.datetime.strptime(time,"%Y/%m/%d %H:%M:%S")
-            if realtime < min_time:
-                continue
-            aid = turnAid(str(item["推荐作品 av 号 / BV 号（必填）"]))
-            text = item["推荐理由（必填）"]
-            picker = item["推荐人"]
-            if picker == "":
-                picker = "神秘人"
-            if item["您的备注"] in activity_list: # 活动特别识别
-                act = item["您的备注"]
-            else:
-                act = ""
-            pickList.append({
-                "status": True,
-                "aid": aid,
-                "reason": text,
-                "picker": picker,
-                "activity": act
-            })
-    return { "code": 0, "msg": None, "data": pickList }
+        min_time = datetime.datetime.today() + datetime.timedelta(days=-8)
+        pickList = []
+        with open("./data/pick.csv","r",encoding="utf-8-sig",newline='') as csvfile:
+            listed = csv.DictReader(csvfile)
+            for item in listed:
+                time = item["提交时间（自动）"]
+                realtime = datetime.datetime.strptime(time,"%Y/%m/%d %H:%M:%S")
+                if realtime < min_time:
+                    continue
+                aid = turnAid(str(item["推荐作品 av 号 / BV 号（必填）"]))
+                text = item["推荐理由（必填）"]
+                picker = item["推荐人"]
+                if picker == "":
+                    picker = "神秘人"
+                if item["您的备注"] in activity_list: # 活动特别识别
+                    act = item["您的备注"]
+                else:
+                    act = ""
+                pickList.append({
+                    "status": True,
+                    "aid": aid,
+                    "reason": text,
+                    "picker": picker,
+                    "activity": act
+                })
+        return { "code": 0, "msg": None, "data": pickList }
+    except:
+        return { "code": -1, "msg": "未知错误", "data": {} }
 
 @router.post("/backend/send-pickup-data")
 async def send_pickup_data(data: list[dict] = Body(...)):
