@@ -68,6 +68,7 @@ def mainfunc():
             normk = adjust_dic.get(int(video_info["mid"]), 1)
             prescore = aid_to_score_norm[video_aid]
             norm_score = float('%.3f' % (prescore * float(normk)))
+            duration = video_stat.get("pages",[{"duration": 0}])[0]["duration"]
             vid_list.append({
                 "prescore": prescore,
                 "score": norm_score,
@@ -85,7 +86,7 @@ def mainfunc():
                 "pubtime": str(video_info["pubdate"]),
                 "adjust_scale": str(normk),
                 "part": '1',
-                "duration": '未取得',
+                "duration": duration,
                 "start_time": '未取得',
                 "full_time": '未取得',
                 "web_prefix": '未取得',
@@ -121,7 +122,7 @@ def mainfunc():
                 if ranking <= main_end + 5:
                     vid_src = f"./video/{vid['aid']}.mp4" # get_video(vid["aid"]) 不再在这个时候下载
                     danmaku_src = get_danmaku(vid["cid"],aid=vid["aid"]) # 弹幕获取
-                    exact_time = vid["pages"][0]["duration"] # exactVideoLength(vid_src)
+                    exact_time = vid["duration"] # exactVideoLength(vid_src)
                     full = False
                     if ranking == 1:
                         full = True
