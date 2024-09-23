@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import importlib
 from io import BytesIO
@@ -14,7 +15,7 @@ import shutil
 from typing import Callable
 import yaml
 
-from fastapi import APIRouter, FastAPI, Body, File, UploadFile, Form
+from fastapi import APIRouter, FastAPI, Body, File, Request, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
@@ -72,18 +73,22 @@ def clean_logger():
         logging.root.removeHandler(handler)
     logging.root.handlers.clear()
 
-def log_stream(log_time):
+STREAM_DELAY = 0.2
+
+async def log_stream(log_time,request: Request):
     """
     循环返回日志
     """
     with open(Path(f"./log/{log_time}.log"), "r", encoding="utf-8-sig") as log_file:
         # log_file.seek(0, 2)
         while True:
-            print("循环日志仍在继续")
+            print(f"{log_time} 的循环日志仍在继续")
+            if await request.is_disconnected():
+                break
             line = log_file.readline()
             if line:
                 yield f"data: {line}\n\n"
-            time.sleep(0.1)
+            await asyncio.sleep(STREAM_DELAY)
 
 @router.get("/backend/get-data-config")
 async def get_data_config():
@@ -114,7 +119,7 @@ async def save_data_config(data: dict = Body(...)):
     return { "code": 0, "msg": None, "data": {} }
 
 @router.get("/backend/get-data")
-async def get_data():
+async def get_data(request: Request):
     """
     启动获取数据脚本，并开启 SSE 传回日志
     """
@@ -125,7 +130,7 @@ async def get_data():
         props = prog.name.split(",")
         if props[0] == 'advanced_data_get':
             log_time = props[1]
-            return StreamingResponse(log_stream(log_time), media_type="text/event-stream")
+            return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
 
     # 否则启动新线程
     clean_logger()
@@ -133,7 +138,7 @@ async def get_data():
     logging.basicConfig(format='[%(levelname)s]\t%(message)s',level=logging.INFO,filename="log/" + log_time + '.log', encoding="utf-8-sig")
     thread = threading.Thread(target=advanced_data_get,name=f'advanced_data_get,{log_time}')
     thread.start()
-    return StreamingResponse(log_stream(log_time), media_type="text/event-stream")
+    return StreamingResponse(log_stream(log_time,request), media_type="text/event-stream")
 
 @router.get("/backend/get-data/stop")
 async def stop_get_data():
@@ -242,7 +247,7 @@ async def send_pickup_data(data: list[dict] = Body(...)):
         return { "code": -1, "msg": "未知错误", "data": {} }
 
 @router.get("/backend/get-pickup-data")
-async def get_pickup_data():
+async def get_pickup_data(request: Request):
     """
     启动获取 Pick Up 数据脚本，并开启 SSE 传回日志
     """
@@ -253,7 +258,7 @@ async def get_pickup_data():
         props = prog.name.split(",")
         if props[0] == 'advanced_resource_get':
             log_time = props[1]
-            return StreamingResponse(log_stream(log_time), media_type="text/event-stream")
+            return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
 
     # 否则启动新线程
     clean_logger()
@@ -261,7 +266,7 @@ async def get_pickup_data():
     logging.basicConfig(format='[%(levelname)s]\t%(message)s',level=logging.INFO,filename="log/" + log_time + '.log', encoding="utf-8-sig")
     thread = threading.Thread(target=advanced_resource_get,name=f'advanced_resource_get,{log_time}')
     thread.start()
-    return StreamingResponse(log_stream(log_time), media_type="text/event-stream")
+    return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
 
 @router.get("/backend/get-pickup-data/stop")
 async def stop_get_data():
@@ -404,7 +409,7 @@ async def upload_calendar_music(file: UploadFile = File(...)):
     return { "code": 0, "msg": None, "data": {} }
 
 @router.get("/backend/start-render")
-async def start_render():
+async def start_render(request: Request):
     """
     启动渲染脚本，并开启 SSE 传回日志
     """
@@ -415,7 +420,7 @@ async def start_render():
         props = prog.name.split(",")
         if props[0] == 'main_progress':
             log_time = props[1]
-            return StreamingResponse(log_stream(log_time), media_type="text/event-stream")
+            return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
 
     # 否则启动新线程
     clean_logger()
@@ -423,7 +428,7 @@ async def start_render():
     logging.basicConfig(format='[%(levelname)s]\t%(message)s',level=logging.INFO,filename="log/" + log_time + '.log', encoding="utf-8-sig")
     thread = threading.Thread(target=main_progress,name=f'main_progress,{log_time}')
     thread.start()
-    return StreamingResponse(log_stream(log_time), media_type="text/event-stream")
+    return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
 
 @router.get("/backend/start-render/stop")
 async def stop_get_data():
