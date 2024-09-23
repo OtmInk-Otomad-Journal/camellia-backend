@@ -1,6 +1,13 @@
 import logging
+import traceback
 
 def advanced_data_get():
+    try:
+        mainfunc()
+    except Exception as e:
+        logging.exception(traceback.format_exc())
+
+def mainfunc():
     """
     获取周刊数据，将生成一个 data.csv 文件
     """
@@ -50,7 +57,7 @@ def advanced_data_get():
 
     logging.info('生成 CSV 信息表格')
 
-    with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
+    with open("./data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
         writer = csv.DictWriter(csvfile,co_header)
         writer.writeheader()
         vid_list = []

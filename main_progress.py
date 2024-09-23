@@ -23,8 +23,8 @@ def main_progress():
     check_dir()
 
     # 获取数据
-    ranked_list = convert_csv("data/data.csv")
-    calendar_list = convert_csv("option/calendar.csv")
+    ranked_list = convert_csv("./data/data.csv")
+    calendar_list = convert_csv("./option/calendar.csv")
 
     # 日历合成
     with open("./config/calendar.yaml","r") as conf_file:
@@ -92,7 +92,7 @@ def main_progress():
         url = f"{render_prefix}/pick"
         if os.path.exists(f"./output/clip/PickRank_{picks}.mp4"):
             continue
-        picking.update({ "output_src": f"./output/clip/PickRank_{picks}.mp4" , 
+        picking.update({ "output_src": f"./output/clip/PickRank_{picks}.mp4" ,
                         "url": url})
         muitl_limit.acquire()
         rend_s = threading.Thread(target=render_video,args=(picking,url))

@@ -149,7 +149,7 @@ async def pull_data():
     """
     获取已经存在的 data.csv 文件，以 JSON 返回
     """
-    return { "code": 0, "msg": None, "data": convert_csv("data/data.csv") }
+    return { "code": 0, "msg": None, "data": convert_csv("./data/data.csv") }
 
 @router.post("/backend/save-data")
 async def save_data(data: list[dict] = Body(...)):
@@ -157,9 +157,9 @@ async def save_data(data: list[dict] = Body(...)):
     保存 data.csv 文件，并将原始版本重命名
     """
     try:
-        if os.path.exists("data/data.csv"):
-            shutil.move("data/data.csv",f"data/backup/data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv")
-        with open("data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
+        if os.path.exists("./data/data.csv"):
+            shutil.move("./data/data.csv",f"./data/backup/data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv")
+        with open("./data/data.csv","w",encoding="utf-8-sig",newline='') as csvfile:
             co_header = data[0].keys()
             writer = csv.DictWriter(csvfile, co_header)
             writer.writeheader()
@@ -175,7 +175,7 @@ async def upload_pickup(file: UploadFile = File(...)):
     """
     contents = await file.read()
     data = contents.decode("utf-8-sig")
-    with open("data/pick.csv","w",encoding="utf-8-sig",newline="") as file:
+    with open("./data/pick.csv","w",encoding="utf-8-sig",newline="") as file:
         file.write(data)
 
 @router.get("/backend/pull-pickup-data")
@@ -218,9 +218,9 @@ async def send_pickup_data(data: list[dict] = Body(...)):
     传回 Pick Up 处理数据
     """
     try:
-        if os.path.exists("data/pick_filtered.csv"):
-            shutil.move("data/pick_filtered.csv",f"data/backup/pick_filtered {time.strftime('%Y-%m-%d %H-%M-%S')}.csv")
-        with open("data/pick_filtered.csv","w",encoding="utf-8-sig",newline='') as csvfile:
+        if os.path.exists("./data/pick_filtered.csv"):
+            shutil.move("./data/pick_filtered.csv",f"./data/backup/pick_filtered {time.strftime('%Y-%m-%d %H-%M-%S')}.csv")
+        with open("./data/pick_filtered.csv","w",encoding="utf-8-sig",newline='') as csvfile:
             co_header = data[0].keys()
             writer = csv.DictWriter(csvfile, co_header)
             writer.writeheader()
