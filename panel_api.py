@@ -313,7 +313,7 @@ def qr_code_stream():
                 response = session.get('https://www.bilibili.com/', headers=headers)
                 with open('cookies/cookie.txt', 'w') as f:
                     for key, value in session.cookies.get_dict().items():
-                        f.write(f"{key}={value},")
+                        f.write(f"{key}={value};")
                 yield "data: " + json.dumps({"success": True}) + "\n\n"
                 break
             time.sleep(1)
