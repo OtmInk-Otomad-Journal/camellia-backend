@@ -130,7 +130,7 @@ async def get_data(request: Request):
         props = prog.name.split(",")
         if props[0] == 'advanced_data_get':
             log_time = props[1]
-            return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
+            return StreamingResponse(log_stream(log_time,request), media_type="text/event-stream")
 
     # 否则启动新线程
     clean_logger()
@@ -258,7 +258,7 @@ async def get_pickup_data(request: Request):
         props = prog.name.split(",")
         if props[0] == 'advanced_resource_get':
             log_time = props[1]
-            return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
+            return StreamingResponse(log_stream(log_time,request), media_type="text/event-stream")
 
     # 否则启动新线程
     clean_logger()
@@ -266,7 +266,7 @@ async def get_pickup_data(request: Request):
     logging.basicConfig(format='[%(levelname)s]\t%(message)s',level=logging.INFO,filename="log/" + log_time + '.log', encoding="utf-8-sig")
     thread = threading.Thread(target=advanced_resource_get,name=f'advanced_resource_get,{log_time}')
     thread.start()
-    return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
+    return StreamingResponse(log_stream(log_time,request), media_type="text/event-stream")
 
 @router.get("/backend/get-pickup-data/stop")
 async def stop_get_data():
@@ -420,7 +420,7 @@ async def start_render(request: Request):
         props = prog.name.split(",")
         if props[0] == 'main_progress':
             log_time = props[1]
-            return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
+            return StreamingResponse(log_stream(log_time,request), media_type="text/event-stream")
 
     # 否则启动新线程
     clean_logger()
@@ -428,7 +428,7 @@ async def start_render(request: Request):
     logging.basicConfig(format='[%(levelname)s]\t%(message)s',level=logging.INFO,filename="log/" + log_time + '.log', encoding="utf-8-sig")
     thread = threading.Thread(target=main_progress,name=f'main_progress,{log_time}')
     thread.start()
-    return StreamingResponse(log_stream(log_time,request: Request), media_type="text/event-stream")
+    return StreamingResponse(log_stream(log_time,request), media_type="text/event-stream")
 
 @router.get("/backend/start-render/stop")
 async def stop_get_data():
