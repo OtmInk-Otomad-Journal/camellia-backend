@@ -82,7 +82,6 @@ async def log_stream(log_time,request: Request):
     with open(Path(f"./log/{log_time}.log"), "r", encoding="utf-8-sig") as log_file:
         # log_file.seek(0, 2)
         while True:
-            print(f"{log_time} 的循环日志仍在继续")
             if await request.is_disconnected():
                 break
             line = log_file.readline()
