@@ -25,7 +25,7 @@ def mainfunc():
 
     import csv
     from get_video_info_score import aid_to_score_norm, selected_video_stat, all_video_info
-    from program_function import check_dir , get_img , get_video , calc_color , exactVideoLength , html_unescape , get_danmaku
+    from program_function import check_dir , get_img , calc_color , exactVideoLength , html_unescape , get_danmaku
     from danmuku_time import danmuku_time
 
     # 新建不存在的文件夹
@@ -119,7 +119,7 @@ def mainfunc():
                     "web_prefix": web_prefix
                     })
                 if ranking <= main_end + 5:
-                    vid_src = get_video(vid["aid"])
+                    vid_src = f"./video/{vid['aid']}.mp4" # get_video(vid["aid"]) 不再在这个时候下载
                     danmaku_src = get_danmaku(vid["cid"],aid=vid["aid"]) # 弹幕获取
                     exact_time = exactVideoLength(vid_src)
                     full = False

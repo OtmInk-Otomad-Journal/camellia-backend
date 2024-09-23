@@ -10,6 +10,9 @@ import traceback
 from get_video_info_score_func import retrieve_single_video_stat
 
 def advanced_resource_get():
+    """
+    下载资源，包括主榜的视频下载与 Pick Up 的进一步数据
+    """
     try:
         mainfunc()
     except Exception as e:
@@ -38,7 +41,12 @@ def mainfunc():
     |title={ranked["title"]}
     |score={ranked["score"]}
     |aid={ranked["aid"]}'''+"\n}}\n")
-    # Pick Up
+
+    # 主榜的视频资源获取
+    for item in mainArr:
+        get_video(item)
+
+    # Pick Up 的资源获取
     allArr = []
     pickHeader = ["aid","bvid","cid",
                 "title","reason","uploader",
