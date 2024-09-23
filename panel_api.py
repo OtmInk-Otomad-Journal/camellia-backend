@@ -82,6 +82,7 @@ def log_stream(log_time):
             line = log_file.readline()
             if line:
                 yield f"data: {line}\n\n"
+            time.sleep(0.1)
 
 @router.get("/backend/get-data-config")
 async def get_data_config():
