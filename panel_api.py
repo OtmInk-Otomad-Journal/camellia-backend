@@ -93,7 +93,9 @@ async def log_stream(log_time, request: Request):
     循环返回日志
     """
     with open(Path(f"./log/{log_time}.log"), "r", encoding="utf-8-sig") as log_file:
-        yield f"data: {log_file.read()}\n\n"
+        init_read = log_file.read()
+        if init_read != "":
+            yield f"data: {log_file.read()}\n\n"
         log_file.seek(0, 2)
         while True:
             if await request.is_disconnected():
