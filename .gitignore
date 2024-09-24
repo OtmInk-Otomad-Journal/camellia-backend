@@ -144,6 +144,7 @@ danmaku/
 driver/
 audio/
 
+lux
 lux.exe
 AutoData/**
 weight/mid_list.bak*

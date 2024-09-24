@@ -69,13 +69,20 @@ app.add_middleware(
 router = APIRouter()
 
 
-def clean_logger():
+def clean_logger(log_time: str = time.strftime("%Y-%m-%d %H-%M-%S")):
     """
-    清理日志器
+    清理日志器，并生成新的日志器
     """
     for handler in logging.root.handlers[:]:
         logging.root.removeHandler(handler)
     logging.root.handlers.clear()
+
+    logging.basicConfig(
+        format="[%(levelname)s]\t%(message)s",
+        level=logging.DEBUG,
+        filename="log/" + log_time + ".log",
+        encoding="utf-8-sig",
+    )
 
 
 STREAM_DELAY = 0.2
@@ -143,14 +150,9 @@ async def get_data(request: Request):
             )
 
     # 否则启动新线程
-    clean_logger()
     log_time = time.strftime("%Y-%m-%d %H-%M-%S")
-    logging.basicConfig(
-        format="[%(levelname)s]\t%(message)s",
-        level=logging.INFO,
-        filename="log/" + log_time + ".log",
-        encoding="utf-8-sig",
-    )
+    clean_logger(log_time)
+
     thread = threading.Thread(
         target=advanced_data_get, name=f"advanced_data_get,{log_time}"
     )
@@ -299,14 +301,9 @@ async def get_pickup_data(request: Request):
             )
 
     # 否则启动新线程
-    clean_logger()
     log_time = time.strftime("%Y-%m-%d %H-%M-%S")
-    logging.basicConfig(
-        format="[%(levelname)s]\t%(message)s",
-        level=logging.INFO,
-        filename="log/" + log_time + ".log",
-        encoding="utf-8-sig",
-    )
+    clean_logger(log_time)
+
     thread = threading.Thread(
         target=advanced_resource_get, name=f"advanced_resource_get,{log_time}"
     )
@@ -489,14 +486,9 @@ async def start_render(request: Request):
             )
 
     # 否则启动新线程
-    clean_logger()
     log_time = time.strftime("%Y-%m-%d %H-%M-%S")
-    logging.basicConfig(
-        format="[%(levelname)s]\t%(message)s",
-        level=logging.INFO,
-        filename="log/" + log_time + ".log",
-        encoding="utf-8-sig",
-    )
+    clean_logger(log_time)
+
     thread = threading.Thread(target=main_progress, name=f"main_progress,{log_time}")
     thread.start()
     return StreamingResponse(
