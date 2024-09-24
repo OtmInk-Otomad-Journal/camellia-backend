@@ -85,7 +85,7 @@ def clean_logger(log_time: str = time.strftime("%Y-%m-%d %H-%M-%S")):
     )
 
 
-STREAM_DELAY = 0.2
+STREAM_DELAY = 0.05
 
 
 async def log_stream(log_time, request: Request):
