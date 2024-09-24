@@ -181,6 +181,7 @@ def mainfunc():
             vid.update(after_dict)
             ranked_list.append(vid)
         writer.writerows(ranked_list)
+    logging.info("--------------------")
     logging.info("周刊数据获取已全部完成！")
 
 

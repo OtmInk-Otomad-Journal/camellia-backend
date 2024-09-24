@@ -8,47 +8,53 @@ from config import read_format, usedTime, render_format, insert_count, all_rende
 
 tempPath = f"./temp"
 
-def duration(file,offset):
+
+def duration(file, offset):
     return float(ffmpeg.probe(file)["streams"][0]["duration"]) + offset
 
+
 def ffVideo(file):
-    vi = ffmpeg.input(file,**read_format)
+    vi = ffmpeg.input(file, **read_format)
     viv = vi.video
     aud = vi.audio
-    return [viv,aud]
+    return [viv, aud]
+
 
 def inVideo(file):
     name = file.split("/")[-1]
-    vi = ffmpeg.input(file,**read_format)
-    viv = vi.filter("fade",st=0,d=0.5)
+    vi = ffmpeg.input(file, **read_format)
+    viv = vi.filter("fade", st=0, d=0.5)
     if not os.path.exists(f"{tempPath}/{name}"):
-        ffmpeg.output(viv,f"{tempPath}/{name}",**render_format).run()
-    viw = ffmpeg.input(f"{tempPath}/{name}",**read_format)
+        ffmpeg.output(viv, f"{tempPath}/{name}", **render_format).run()
+    viw = ffmpeg.input(f"{tempPath}/{name}", **read_format)
     aud = vi.audio
-    return [viw,aud]
+    return [viw, aud]
+
 
 def inoutVideo(file):
     name = file.split("/")[-1]
-    vi = ffmpeg.input(file,**read_format)
-    viv = vi.filter("fade",st=0,d=0.5)
-    viv = viv.filter("fade",t="out",st=duration(file,-0.5),d=0.5)
+    vi = ffmpeg.input(file, **read_format)
+    viv = vi.filter("fade", st=0, d=0.5)
+    viv = viv.filter("fade", t="out", st=duration(file, -0.5), d=0.5)
     if not os.path.exists(f"{tempPath}/{name}"):
-        ffmpeg.output(viv,f"{tempPath}/{name}",**render_format).run()
-    viw = ffmpeg.input(f"{tempPath}/{name}",**read_format)
+        ffmpeg.output(viv, f"{tempPath}/{name}", **render_format).run()
+    viw = ffmpeg.input(f"{tempPath}/{name}", **read_format)
     aud = vi.audio
-    return [viw,aud]
+    return [viw, aud]
+
 
 def outVideo(file):
     name = file.split("/")[-1]
-    vi = ffmpeg.input(file,**read_format)
-    viv = vi.filter("fade",t="out",st=duration(file,-0.5),d=0.5)
+    vi = ffmpeg.input(file, **read_format)
+    viv = vi.filter("fade", t="out", st=duration(file, -0.5), d=0.5)
     if not os.path.exists(f"{tempPath}/{name}"):
-        ffmpeg.output(viv,f"{tempPath}/{name}",**render_format).run()
-    viw = ffmpeg.input(f"{tempPath}/{name}",**read_format)
+        ffmpeg.output(viv, f"{tempPath}/{name}", **render_format).run()
+    viw = ffmpeg.input(f"{tempPath}/{name}", **read_format)
     aud = vi.audio
-    return [viw,aud]
+    return [viw, aud]
 
-def AllVideo(main_end,pickArr):
+
+def AllVideo(main_end, pickArr):
     filePath = f"./output/clip/{usedTime}"
 
     if not os.path.exists(filePath):
@@ -69,18 +75,18 @@ def AllVideo(main_end,pickArr):
 
     AllArr.append(inVideo("./template/pass/passMain.mp4"))
 
-    for clips in range(main_end,insert_count+1,-1):
+    for clips in range(main_end, insert_count + 1, -1):
         rank_src = main_rank_column[clips]
         AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
         AllArr.append(ffVideo("./template/pass/pass.mp4"))
-    rank_src = main_rank_column[insert_count+1]
+    rank_src = main_rank_column[insert_count + 1]
     AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
 
     # Pick Up
 
     if pickArr != []:
         AllArr.append(ffVideo("./template/pass/passPick.mp4"))
-        for clipsto in range(1,len(pickArr)):
+        for clipsto in range(1, len(pickArr)):
             AllArr.append(ffVideo(f"./output/clip/PickRank_{clipsto}.mp4"))
             AllArr.append(ffVideo("./template/pass/pass.mp4"))
     if os.path.exists("./option/canbin.mp4"):
@@ -101,7 +107,7 @@ def AllVideo(main_end,pickArr):
 
     # 倒数主榜
 
-    for clips in range(insert_count,1,-1):
+    for clips in range(insert_count, 1, -1):
         rank_src = main_rank_column[clips]
         AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
         AllArr.append(ffVideo("./template/pass/pass.mp4"))
@@ -114,18 +120,31 @@ def AllVideo(main_end,pickArr):
         if onum == 1:
             combVideo = items
             continue
-        combVideo = ffmpeg.concat(combVideo[0],combVideo[1],items[0],items[1],v=1,a=1).node
-    ffmpeg.output(combVideo[0],combVideo[1],f'./output/final/Rank_{usedTime}.mp4',**all_render_format).run()
+        combVideo = ffmpeg.concat(
+            combVideo[0], combVideo[1], items[0], items[1], v=1, a=1
+        ).node
+    ffmpeg.output(
+        combVideo[0],
+        combVideo[1],
+        f"./output/final/Rank_{usedTime}.mp4",
+        **all_render_format,
+    ).run()
     if os.path.exists("./option/canbin.mp4"):
-        shutil.move("./option/canbin.mp4",f"{filePath}/canbin_{usedTime}.mp4")
-    for clips in range(main_end,0,-1):
+        shutil.move("./option/canbin.mp4", f"{filePath}/canbin_{usedTime}.mp4")
+    for clips in range(main_end, 0, -1):
         rank_src = main_rank_column[clips]
-        shutil.move(f"./output/clip/MainRank_{rank_src}.mp4",f"{filePath}/MainRank_{rank_src}.mp4")
-    for clipsto in range(1,len(pickArr)+1):
-        shutil.move(f"./output/clip/PickRank_{clipsto}.mp4",f"{filePath}/PickRank_{clipsto}.mp4")
-    shutil.move("./output/clip/Calendar.mp4",f"{filePath}/Calendar.mp4")
+        shutil.move(
+            f"./output/clip/MainRank_{rank_src}.mp4",
+            f"{filePath}/MainRank_{rank_src}.mp4",
+        )
+    for clipsto in range(1, len(pickArr) + 1):
+        shutil.move(
+            f"./output/clip/PickRank_{clipsto}.mp4",
+            f"{filePath}/PickRank_{clipsto}.mp4",
+        )
+    shutil.move("./output/clip/Calendar.mp4", f"{filePath}/Calendar.mp4")
     for curDir, dirs, files in os.walk(f"{tempPath}"):
         for temp_f in files:
             os.remove(f"{tempPath}/{temp_f}")
-    os.remove("./time.txt")
+    # os.remove("./time.txt")
     os.remove("./data/picked.csv")
