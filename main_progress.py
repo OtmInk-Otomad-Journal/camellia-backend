@@ -25,7 +25,7 @@ def mainfunc():
     formatter = logging.Formatter("[%(levelname)s]\t%(message)s")
     console_handler = logging.StreamHandler()
     console_handler.setFormatter(formatter)
-    console_handler.setLevel("INFO")
+    console_handler.setLevel("DEBUG")
     logger = logging.getLogger()
     logger.addHandler(console_handler)
 
