@@ -44,6 +44,8 @@ app.add_middleware(
 
 router = APIRouter()
 
+LAST_CHANGE_TIME = time.strftime("%Y-%m-%d %H-%M-%S")  # 上一次的更改时间
+
 
 @router.get("/backend/pull-data")
 async def pull_data():
@@ -52,30 +54,39 @@ async def pull_data():
     """
     try:
         data = convert_csv("./data/data.csv")
-        return {"code": 0, "msg": None, "data": data}
+        return {
+            "code": 0,
+            "msg": None,
+            "data": {"last_change": LAST_CHANGE_TIME, "data": data},
+        }
     except:
         return {"code": -1, "msg": "未知错误", "data": {}}
 
 
 @router.post("/backend/save-data")
-async def save_data(data: list[dict] = Body(...)):
+async def save_data(data: dict = Body(...)):
     """
     保存 data.csv 文件，并将原始版本重命名
     """
     try:
+        global LAST_CHANGE_TIME
+        if data["last_change"] != LAST_CHANGE_TIME:
+            return {"code": -3, "msg": "编辑冲突，请刷新页面重试。", "data": {}}
         if os.path.exists("./data/data.csv"):
             shutil.move(
                 "./data/data.csv",
-                f"./data/backup/data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv",
+                f"./data/backup/data {LAST_CHANGE_TIME}.csv",
             )
+        list_data = data["data"]
         with open("./data/data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
-            co_header = data[0].keys()
+            LAST_CHANGE_TIME = time.strftime("%Y-%m-%d %H-%M-%S")
+            co_header = list_data[0].keys()
             writer = csv.DictWriter(csvfile, co_header)
             writer.writeheader()
-            writer.writerows(data)
+            writer.writerows(list_data)
         return {"code": 0, "msg": None, "data": {}}
-    except:
-        return {"code": -1, "msg": "未知错误", "data": {}}
+    except Exception as e:
+        return {"code": -1, "msg": e, "data": {}}
 
 
 @router.get("/down-data/")
