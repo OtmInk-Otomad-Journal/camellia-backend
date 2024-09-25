@@ -11,7 +11,14 @@ load_dotenv()
 from fastapi import APIRouter, FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 
-from program_function import convert_csv
+
+def convert_csv(file):
+    outlist = []
+    with open(file, "r", encoding="utf-8-sig") as datafile:
+        lists = csv.DictReader(datafile)
+        for sti in lists:
+            outlist.append(sti)
+    return outlist
 
 
 def auditor_check_dir():
