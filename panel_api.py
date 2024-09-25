@@ -13,7 +13,13 @@ import csv
 import os
 import shutil
 from typing import Callable
+import requests
 import yaml
+
+from dotenv import load_dotenv
+
+# 加载环境变量
+load_dotenv()
 
 from fastapi import APIRouter, FastAPI, Body, File, Request, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -560,6 +566,47 @@ async def get_fastview(filename: str):
     """
     with open(f"./fast_view/{filename}", encoding="utf-8-sig") as file:
         return {"code": 0, "msg": None, "data": {"content": file.read()}}
+
+
+@router.get("/backend/online-send-data/")
+async def online_send_data():
+    """
+    上传 data.csv 到在线网站
+    """
+    try:
+        key = os.getenv("ONLINE_AUTH_KEY", "")
+        url = os.getenv("ONLINE_PUSH_DATA_URL", "")
+
+        data = convert_csv("./data/data.csv")
+        requests.post(url=url, data=data, params={"key": key})
+        return {"code": 0, "msg": None, "data": {}}
+    except:
+        return {"code": -1, "msg": "未知错误", "data": {}}
+
+
+@router.get("/backend/online-download-data/")
+async def online_download_data():
+    """
+    从在线网站下载 data.csv 并保存
+    """
+    try:
+        url = os.getenv("ONLINE_DOWN_DATA_URL", "")
+        key = os.getenv("ONLINE_AUTH_KEY", "")
+        data = requests.get(url, params={"key": key}).json()["data"]
+
+        if os.path.exists("./data/data.csv"):
+            shutil.move(
+                "./data/data.csv",
+                f"./data/backup/data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv",
+            )
+        with open("./data/data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
+            co_header = data[0].keys()
+            writer = csv.DictWriter(csvfile, co_header)
+            writer.writeheader()
+            writer.writerows(data)
+        return {"code": 0, "msg": None, "data": {}}
+    except:
+        return {"code": -1, "msg": "未知错误", "data": {}}
 
 
 app.include_router(router)
