@@ -571,7 +571,7 @@ async def get_fastview(filename: str):
 @router.get("/backend/online-send-data/")
 async def online_send_data():
     """
-    上传 data.csv 到在线网站
+    到在线网站上传 data.csv
     """
     try:
         key = os.getenv("ONLINE_AUTH_KEY", "")

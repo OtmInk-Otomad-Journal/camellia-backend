@@ -78,7 +78,8 @@ async def down_data(key: str = ""):
     """
     if key == os.getenv("ONLINE_AUTH_KEY", ""):
         try:
-            return {"code": 0, "msg": None, "data": convert_csv(data)}
+            data = convert_csv("./data/data.csv")
+            return {"code": 0, "msg": None, "data": data}
         except:
             return {"code": -1, "msg": "未知错误", "data": {}}
     else:
