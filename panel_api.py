@@ -584,8 +584,8 @@ async def online_send_data():
         return {"code": -1, "msg": "未知错误", "data": {}}
 
 
-@router.get("/backend/online-download-data/")
-async def online_download_data():
+@router.get("/backend/online-get-data/")
+async def online_get_data():
     """
     从在线网站下载 data.csv 并保存
     """
