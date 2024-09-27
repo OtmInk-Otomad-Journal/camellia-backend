@@ -63,7 +63,8 @@ def AllVideo(main_end, pickArr):
         times = 2
         while os.path.exists(filePath + "_" + str(times)):
             times += 1
-        os.mkdir(filePath + "_" + str(times))
+        filePath = filePath + "_" + str(times)
+        os.mkdir(filePath)
     with open("./data/data.csv", "r", encoding="utf-8-sig") as csvfile:
         reader = csv.reader(csvfile)
         main_rank_column = [row[0] for row in reader]
