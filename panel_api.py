@@ -437,7 +437,7 @@ async def upload_pickup(file: UploadFile = File(...)):
     md5 = hashlib.md5(contents).hexdigest()
     url = f"./cover/calendar/{md5}.png"
     image = Image.open(BytesIO(contents))
-    image.save(f".{url}")
+    image.save(url)
     return {"code": 0, "msg": None, "data": {"url": url}}
 
 
