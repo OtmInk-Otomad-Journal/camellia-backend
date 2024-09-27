@@ -33,6 +33,7 @@ def render_video(data, url, audio=None, fast=False):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         text=True,
+        encoding="utf-8-sig",
     )
 
     for info in iter(process.stdout.readline, "b"):

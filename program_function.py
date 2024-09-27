@@ -86,6 +86,7 @@ def get_video(aid, part=1, cid=None):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                encoding="utf-8-sig",
             )
             for info in iter(process.stdout.readline, "b"):
                 if process.poll() is not None:
@@ -365,7 +366,11 @@ def video_cut(aid, start_time=0, duration=10):
     ]
     if not os.path.exists(f"./videoc/{aid}.mp4"):
         process = subprocess.Popen(
-            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8-sig",
         )
 
         for info in iter(process.stderr.readline, "b"):
