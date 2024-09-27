@@ -441,6 +441,17 @@ async def upload_pickup(file: UploadFile = File(...)):
     return {"code": 0, "msg": None, "data": {"url": url}}
 
 
+@router.post("/backend/upload-canbin")
+async def upload_canbin(file: UploadFile = File(...)):
+    """
+    上传嘉宾环节视频
+    """
+    contents = await file.read()
+    with open("./option/canbin.mp4", "wb") as file:
+        file.write(contents)
+    return {"code": 0, "msg": None, "data": {}}
+
+
 @router.post("/backend/upload-calendar-config")
 async def upload_pickup_config(data: dict = Body(...)):
     """
@@ -533,6 +544,21 @@ async def download_file(filename: str):
         return {"code": -1, "msg": "下载值不能为空", "data": None}
 
 
+@router.get("/backend/download-clip/{filename}")
+async def download_clip(filename: str):
+    """
+    直接下载对应片段
+    """
+    if len(filename) != 0:
+        directory_path = f"./output/clip/"
+        file_path = os.path.join(directory_path, filename)
+        return FileResponse(
+            file_path, media_type="application/octet-stream", filename=filename
+        )
+    else:
+        return {"code": -1, "msg": "下载值不能为空", "data": None}
+
+
 @router.get("/backend/get-result-list")
 async def get_result_list():
     """
@@ -573,6 +599,36 @@ async def get_clip_list():
             if len(curDir.replace(directory_path, "")) == 0:
                 file_list.append({"value": file})
     return {"code": 0, "msg": None, "data": {"files": file_list}}
+
+
+@router.get("/backend/get-clip-dir-list")
+async def get_clip_dir_list():
+    """
+    获取存在的片段文件夹
+    """
+    directory_path = f"./output/clip/"
+
+    subfolders = []
+    for item in os.listdir(directory_path):
+        if os.path.isdir(os.path.join(directory_path, item)):
+            subfolders.append({"value": item})
+
+    return {"code": 0, "msg": None, "data": {"dirs": subfolders}}
+
+
+@router.get("/backend/unpack-clip-dir/{dirname}")
+async def get_clip_dir_list(dirname: str):
+    """
+    解包片段文件夹
+    """
+    directory_path = f"./output/clip/{dirname}"
+    target_path = "./output/clip/"
+    for curDir, dirs, files in os.walk(directory_path):
+        for file in files:
+            if len(curDir.replace(directory_path, "")) == 0:
+                shutil.copy(os.path.join(curDir, file), os.path.join(target_path, file))
+
+    return {"code": 0, "msg": None, "data": {}}
 
 
 @router.get("/backend/del-clip/{filename}")
