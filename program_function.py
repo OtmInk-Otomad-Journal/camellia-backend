@@ -81,9 +81,17 @@ def get_video(aid, part=1, cid=None):
         d_time += 1
         if d_time <= 5:
             logging.info(f"第 {d_time} 次下载 av{aid} 视频...")
-            subprocess.Popen(
-                command + ["-o", "./video", "-O", str(aid), f"av{aid}{p_src}"]
-            ).wait()
+            process = subprocess.Popen(
+                command + ["-o", "./video", "-O", str(aid), f"av{aid}{p_src}"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            for info in iter(process.stdout.readline, "b"):
+                if process.poll() is not None:
+                    break
+                if len(info) != 0:
+                    logging.info(info.replace("\n", ""))
         # 备用 yt-dlp
         if d_time > 5:
             logging.info(f"改用 yt-dlp，第 {d_time} 次下载 av{aid} 视频...")
@@ -356,7 +364,16 @@ def video_cut(aid, start_time=0, duration=10):
         f"./videoc/{aid}.mp4",
     ]
     if not os.path.exists(f"./videoc/{aid}.mp4"):
-        subprocess.Popen(command).wait()
+        process = subprocess.Popen(
+            command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+        )
+
+        for info in iter(process.stderr.readline, "b"):
+            if process.poll() is not None:
+                break
+            if len(info) != 0:
+                logging.info(info.replace("\n", ""))
+
     return f"./videoc/{aid}.mp4"
 
 

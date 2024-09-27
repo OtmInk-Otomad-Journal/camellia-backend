@@ -435,7 +435,7 @@ async def upload_pickup(file: UploadFile = File(...)):
     """
     contents = await file.read()
     md5 = hashlib.md5(contents).hexdigest()
-    url = f"/cover/calendar/{md5}.png"
+    url = f"./cover/calendar/{md5}.png"
     image = Image.open(BytesIO(contents))
     image.save(f".{url}")
     return {"code": 0, "msg": None, "data": {"url": url}}
@@ -557,6 +557,48 @@ async def get_fastview_list():
         for file in files:
             file_list.append({"value": file})
     return {"code": 0, "msg": None, "data": {"files": file_list}}
+
+
+@router.get("/backend/get-clip-list")
+async def get_clip_list():
+    """
+    获取存在的片段视频（渲染小节）列表
+    """
+    directory_path = f"./output/clip/"
+    file_list = []
+    for curDir, dirs, files in os.walk(f"{directory_path}"):
+        for file in files:
+            showDir = curDir.replace(directory_path, "")
+            file_list.append({"value": showDir + file})
+    return {"code": 0, "msg": None, "data": {"files": file_list}}
+
+
+@router.get("/backend/del-clip/{filename}")
+async def del_clip(filename: str):
+    """
+    删除片段视频（小节）
+    """
+    if len(filename) != 0:
+        directory_path = f"./output/clip/"
+        file_path = os.path.join(directory_path, filename)
+        os.remove(file_path)
+        return {"code": 0, "msg": None, "data": {}}
+    else:
+        return {"code": -1, "msg": "文件名不能为空", "data": None}
+
+
+@router.get("/backend/del-final/{filename}")
+async def del_final(filename: str):
+    """
+    删除大视频（渲染成果）
+    """
+    if len(filename) != 0:
+        directory_path = f"./output/final/"
+        file_path = os.path.join(directory_path, filename)
+        os.remove(file_path)
+        return {"code": 0, "msg": None, "data": {}}
+    else:
+        return {"code": -1, "msg": "文件名不能为空", "data": None}
 
 
 @router.get("/backend/get-fastview/{filename}")

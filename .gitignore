@@ -185,3 +185,5 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+.test.py
