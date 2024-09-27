@@ -84,7 +84,6 @@ def get_video(aid, part=1, cid=None):
             process = subprocess.Popen(
                 command + ["-o", "./video", "-O", str(aid), f"av{aid}{p_src}"],
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
                 text=True,
                 encoding="utf-8-sig",
             )
@@ -367,7 +366,6 @@ def video_cut(aid, start_time=0, duration=10):
     if not os.path.exists(f"./videoc/{aid}.mp4"):
         process = subprocess.Popen(
             command,
-            stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
             encoding="utf-8-sig",

@@ -31,7 +31,6 @@ def render_video(data, url, audio=None, fast=False):
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
         text=True,
         encoding="utf-8-sig",
     )
