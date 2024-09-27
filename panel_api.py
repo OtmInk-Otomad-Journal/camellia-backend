@@ -542,7 +542,8 @@ async def get_result_list():
     file_list = []
     for curDir, dirs, files in os.walk(f"{directory_path}"):
         for file in files:
-            file_list.append({"value": file})
+            if len(curDir.replace(directory_path, "")) == 0:
+                file_list.append({"value": file})
     return {"code": 0, "msg": None, "data": {"files": file_list}}
 
 
@@ -555,7 +556,8 @@ async def get_fastview_list():
     file_list = []
     for curDir, dirs, files in os.walk(f"{directory_path}"):
         for file in files:
-            file_list.append({"value": file})
+            if len(curDir.replace(directory_path, "")) == 0:
+                file_list.append({"value": file})
     return {"code": 0, "msg": None, "data": {"files": file_list}}
 
 
@@ -568,8 +570,8 @@ async def get_clip_list():
     file_list = []
     for curDir, dirs, files in os.walk(f"{directory_path}"):
         for file in files:
-            showDir = curDir.replace(directory_path, "")
-            file_list.append({"value": showDir + file})
+            if len(curDir.replace(directory_path, "")) == 0:
+                file_list.append({"value": file})
     return {"code": 0, "msg": None, "data": {"files": file_list}}
 
 
