@@ -1,3 +1,4 @@
+import logging
 from moviepy.editor import *
 import os
 import shutil
@@ -55,6 +56,7 @@ def outVideo(file):
 
 
 def AllVideo(main_end, pickArr):
+    logging.info(f"进入视频总合成环节")
     filePath = f"./output/clip/{usedTime}"
 
     if not os.path.exists(filePath):
@@ -129,12 +131,20 @@ def AllVideo(main_end, pickArr):
         combVideo = ffmpeg.concat(
             combVideo[0], combVideo[1], items[0], items[1], v=1, a=1
         ).node
+
+    if os.path.exists(f"./output/final/Rank_{usedTime}.mp4"):
+        logging.warning(f"Rank_{usedTime}.mp4 已存在，本次合成将覆盖该文件。")
+        os.remove(f"./output/final/Rank_{usedTime}.mp4")
+
+    logging.info(f"正在渲染 Rank_{usedTime}.mp4 ...")
     ffmpeg.output(
         combVideo[0],
         combVideo[1],
         f"./output/final/Rank_{usedTime}.mp4",
         **all_render_format,
     ).run()
+    logging.info(f"Rank_{usedTime}.mp4 渲染完成！")
+    logging.info(f"正在转移文件至 {usedTime} 文件夹中...")
     if os.path.exists("./option/canbin.mp4"):
         shutil.move("./option/canbin.mp4", f"{filePath}/canbin_{usedTime}.mp4")
     for clips in range(main_end, 0, -1):
@@ -149,8 +159,13 @@ def AllVideo(main_end, pickArr):
             f"{filePath}/PickRank_{clipsto}.mp4",
         )
     shutil.move("./output/clip/Calendar.mp4", f"{filePath}/Calendar.mp4")
+    logging.info(f"转移完成！")
+    logging.info(f"正在清理文件...")
     for curDir, dirs, files in os.walk(f"{tempPath}"):
         for temp_f in files:
             os.remove(f"{tempPath}/{temp_f}")
     # os.remove("./time.txt")
-    os.remove("./data/picked.csv")
+    if os.path.exists("./data/picked.csv"):
+        os.remove("./data/picked.csv")
+        logging.warning("没有检测到 picked.csv 文件，请确认是否遗漏了 Pick Up 环节！")
+    logging.info(f"文件清理完毕！")

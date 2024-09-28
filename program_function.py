@@ -229,6 +229,7 @@ def check_dir():
     """
     检查文件夹是否齐全，否则就新建
     """
+    logging.warning("文件夹不齐全，将新建文件夹")
     dirpaths = [
         "avatar",
         "cover",
