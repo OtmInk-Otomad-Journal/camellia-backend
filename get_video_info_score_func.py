@@ -646,6 +646,9 @@ def apply_bilibili_api(
                     f"NetworkException 412 at {video_aid}, retrying {try_times} times"
                 )
                 try_times += random.randint(0, 1)
+                if try_times > 5:
+                    # 切换代理
+                    switch_proxy()
                 time.sleep(sleep_inteval * try_times * 2)
             else:
                 logging.error(
@@ -703,3 +706,11 @@ def apply_response_getter(
         data = result["data"]
         return 1, data
     raise Exception(f"Max Try Times Exceeded For {url}")
+
+
+def switch_proxy():
+    from bilibili_api import settings
+
+    data = requests.get(url=os.getenv("PROXY_LIST_URL", "")).json()
+    proxy_url = "http://" + data["obj"][0]["ip"] + ":" + data["obj"][0]["port"]
+    settings.proxy = proxy_url
