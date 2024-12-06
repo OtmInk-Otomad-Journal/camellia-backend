@@ -631,6 +631,7 @@ def apply_bilibili_api(
                 logging.info(
                     f"ServerDisconnectedError at {video_aid}, retrying {try_times} times"
                 )
+                switch_proxy()
         except ResponseCodeException as e:
             if e.code in {12002, 12061}:  # 大概是被删了或是移到别的分区了
                 logging.warning(f"ResponseCodeException at {video_aid}, aborted")
