@@ -717,7 +717,7 @@ async def del_vid(filename: str):
     """
     if len(filename) != 0:
         filename = filename + ".mp4"
-        ori_filename = "ori_" + filename + ".mp4"
+        ori_filename = "ori_" + filename
 
         directory_path = f"./video/"
         file_path = os.path.join(directory_path, filename)
