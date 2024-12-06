@@ -4,6 +4,7 @@ import importlib
 from io import BytesIO
 import json
 from pathlib import Path
+import subprocess
 import time
 import logging
 import ctypes
@@ -707,6 +708,36 @@ async def online_get_data():
         return {"code": 0, "msg": None, "data": {}}
     except:
         return {"code": -1, "msg": "未知错误", "data": {}}
+
+
+@router.get("/backend/del-vid/{filename}")
+async def del_vid(filename: str):
+    """
+    删除指定名称的视频
+    """
+    if len(filename) != 0:
+        filename = filename + ".mp4"
+        directory_path = f"./video/"
+        file_path = os.path.join(directory_path, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        directory_path = f"./videoc/"
+        file_path = os.path.join(directory_path, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        return {"code": 0, "msg": None, "data": {}}
+    else:
+        return {"code": -1, "msg": "文件名不能为空", "data": None}
+
+
+@router.get("/backend/purge-wvc")
+async def purge_wvc():
+    """
+    清理 WVC 缓存
+    """
+    command = ["node", "wvc_cache.js"]
+    subprocess.Popen(command)
+    return {"code": 0, "msg": None, "data": {}}
 
 
 app.include_router(router)
