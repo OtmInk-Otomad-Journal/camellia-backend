@@ -660,7 +660,12 @@ def apply_bilibili_api(
             exit()
         except Exception as e:
             logging.error(f"Unhandled Exception: {type(e)} {e}")
-            return -2, []
+            from bilibili_api import settings
+
+            if len(settings.proxy) > 0:
+                switch_proxy()
+            else:
+                return -2, []
         finally:
             time.sleep(sleep_inteval * (try_times + 1))
     return 1, contents
@@ -709,8 +714,12 @@ def apply_response_getter(
 
 
 def switch_proxy():
+    logging.info("切换代理")
     from bilibili_api import settings
 
-    data = requests.get(url=os.getenv("PROXY_LIST_URL", "")).json()
-    proxy_url = "http://" + data["obj"][0]["ip"] + ":" + data["obj"][0]["port"]
+    try:
+        data = requests.get(url=os.getenv("PROXY_LIST_URL", "")).json()
+        proxy_url = "http://" + data["obj"][0]["ip"] + ":" + data["obj"][0]["port"]
+    except:
+        proxy_url = ""
     settings.proxy = proxy_url
