@@ -287,8 +287,8 @@ async def get_comments(aid: int, credential: Credential) -> List[Dict]:
         comments.extend(c["replies"])
         count += c["page"]["size"]
         page += 1
-        if count >= c["page"]["count"] or page > 250:
-            break  # 12.6 发现为250页 // 400 页达目前已知最大限制。
+        if count >= c["page"]["count"] or page > 100:
+            break  # 12.6 发现为100页左右 // 400 页达目前已知最大限制。
         time.sleep(1)
     return reply_trimmer(comments)
 
