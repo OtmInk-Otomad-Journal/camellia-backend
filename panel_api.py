@@ -717,14 +717,24 @@ async def del_vid(filename: str):
     """
     if len(filename) != 0:
         filename = filename + ".mp4"
+        ori_filename = "ori_" + filename + ".mp4"
+
         directory_path = f"./video/"
         file_path = os.path.join(directory_path, filename)
         if os.path.exists(file_path):
             os.remove(file_path)
+        file_path = os.path.join(directory_path, ori_filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
         directory_path = f"./videoc/"
         file_path = os.path.join(directory_path, filename)
         if os.path.exists(file_path):
             os.remove(file_path)
+        file_path = os.path.join(directory_path, ori_filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
         return {"code": 0, "msg": None, "data": {}}
     else:
         return {"code": -1, "msg": "文件名不能为空", "data": None}
