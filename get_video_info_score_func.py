@@ -273,6 +273,27 @@ def reply_trimmer(comments: List[Dict]) -> List[Dict]:
     return processed_comments
 
 
+async def lazy_get_comments(aid: int, credential: Credential) -> List[Dict]:
+    """
+    懒加载获取评论
+    """
+    comments = []
+    next = 0
+    while True:
+        c = await comment.get_comments(
+            aid, comment.CommentResourceType.VIDEO, next, credential=credential
+        )
+        assert type(c) is dict
+        if "replies" not in c or c["replies"] is None:
+            break
+        comments.extend(c["replies"])
+        next = c["cursor"]["next"]
+        if c["cursor"]["is_end"]:
+            break
+        time.sleep(0.25)
+    return reply_trimmer(comments)
+
+
 async def get_comments(aid: int, credential: Credential) -> List[Dict]:
     comments = []
     page = 1
@@ -286,10 +307,7 @@ async def get_comments(aid: int, credential: Credential) -> List[Dict]:
             break
         comments.extend(c["replies"])
         count += len(c["replies"])
-        if (
-            count >= c["cursor"]["all_count"]
-            or page >= c["cursor"]["all_count"] / 20 + 1
-        ):
+        if count >= c["page"]["count"] or page > 100:
             break  # 12.6 发现为100页左右 // 400 页达目前已知最大限制。
         page += 1
         time.sleep(1)
@@ -559,7 +577,7 @@ def retrieve_single_video_tag(
 def retrieve_single_video_comment(
     video_aid: int, credential: Credential, max_try_times=10, sleep_inteval=3.0
 ) -> Tuple[int, List[Dict]]:
-    task = partial(get_comments, video_aid, credential)
+    task = partial(lazy_get_comments, video_aid, credential)
     status, comments_raw = apply_bilibili_api(
         task, video_aid, max_try_times=max_try_times, sleep_inteval=sleep_inteval
     )
