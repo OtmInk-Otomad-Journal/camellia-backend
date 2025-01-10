@@ -361,7 +361,9 @@ def video_cut(aid, start_time=0, duration=10):
         "-c:v",
         vcodec,
         "-c:a",
-        "copy",
+        "aac",
+        "-ar",
+        "44100",
         f"./videoc/{aid}.mp4",
     ]
     if not os.path.exists(f"./videoc/{aid}.mp4"):
