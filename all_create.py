@@ -1,5 +1,5 @@
 import logging
-from moviepy.editor import *
+from moviepy import *
 import os
 import shutil
 import ffmpeg

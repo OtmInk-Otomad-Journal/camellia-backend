@@ -1,3 +1,4 @@
+import shutil
 import requests
 import logging
 import subprocess
@@ -62,6 +63,9 @@ def exactVideoLength(url):
     tdur = float(ffmpeg.probe(url)["streams"][0]["duration"])
     return tdur
 
+# 复制视频
+def copy_video(aid, newaid):
+    shutil.copy(f"./video/{aid}.mp4",f"./video/{newaid}.mp4")
 
 # 视频下载
 def get_video(aid, part=1, cid=None):
@@ -94,13 +98,15 @@ def get_video(aid, part=1, cid=None):
                     logging.info(info.replace("\n", ""))
         # 备用 yt-dlp
         if d_time > 5:
-            logging.info(f"改用 yt-dlp，第 {d_time} 次下载 av{aid} 视频...")
-            yt_opt = {"outtmpl": f"./video/{aid}.%(ext)s"}
-            try:
-                with yt_dlp.YoutubeDL(yt_opt) as ydl:
-                    ydl.download([f"https://www.bilibili.com/video/av{aid}"])
-            except:
-                pass
+            logging.error(f"av{aid} 下载失败，请手动处理！")
+            raise Exception("视频下载失败")
+            # logging.info(f"改用 yt-dlp，第 {d_time} 次下载 av{aid} 视频...")
+            # yt_opt = {"outtmpl": f"./video/{aid}.%(ext)s"}
+            # try:
+            #     with yt_dlp.YoutubeDL(yt_opt) as ydl:
+            #         ydl.download([f"https://www.bilibili.com/video/av{aid}"])
+            # except:
+            #     pass
     if d_time != 0:
         any_to_avc(f"./video/{aid}.mp4")
     logging.info(f"av{aid} 视频下载完成")
@@ -110,6 +116,10 @@ def get_video(aid, part=1, cid=None):
 # 弹幕下载
 def get_danmaku(cid, aid=None):
     from config import api_header
+
+    if(os.path.exists(f"./danmaku/{cid}.xml")):
+        logging.info(f"av{aid} 弹幕已存在，直接返回")
+        return f"./danmaku/{cid}.xml"
 
     danmaku_content = requests.get(
         f"https://comment.bilibili.com/{cid}.xml", headers=api_header
@@ -280,6 +290,12 @@ def check_dir():
             header = ["color", "progress", "date", "title", "subtitle", "cover"]
             adjustInfo = csv.DictWriter(adjustfile, header)
             adjustInfo.writeheader()
+    if not os.path.exists("./option/append.csv"):
+        # 追加内容
+        with open(
+            "option/append.csv", "w", encoding="utf-8-sig", newline=""
+        ) as file:
+            pass
 
 
 def check_env():

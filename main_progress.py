@@ -5,7 +5,7 @@ import yaml
 import time
 
 from all_create import AllVideo
-from program_function import convert_csv, extract_single_column, check_env, check_dir
+from program_function import convert_csv, copy_video, extract_single_column, check_env, check_dir
 from render_video_wvc import render_video
 
 import traceback
@@ -100,14 +100,26 @@ def mainfunc():
 
     # PICK UP 合成
     picks = 0
+    dublicate_list = []
     for picking in picked_list:
         picks += 1
+        dublicate_list.append(picking["aid"])
         url = f"{render_prefix}/pick"
         if os.path.exists(f"./output/clip/PickRank_{picks}.mp4"):
             continue
         picking.update(
             {"output_src": f"./output/clip/PickRank_{picks}.mp4", "url": url}
         )
+        # 如果有重复 aid，则递增开始时间
+        dub_count = dublicate_list.count(picking["aid"])
+        if(dub_count) > 1:
+            copy_video(picking["aid"],str(picking["aid"]) + "~" + str(dub_count))
+            picking.update(
+                {   
+                    "aid": str(picking["aid"]) + "~" + str(dub_count),
+                    "start_time": float(picking["start_time"]) + float(picking["full_time"] * ( dub_count - 1 ))
+                }
+            )
         muitl_limit.acquire()
         rend_s = threading.Thread(target=render_video, args=(picking, url))
         rend_s.start()

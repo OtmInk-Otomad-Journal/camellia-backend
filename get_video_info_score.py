@@ -124,13 +124,34 @@ logging.info("按评论数过滤后，待拉取视频数: " + str(len(all_video_
 credential = get_credential_from_path(cookie_file_path)
 cookie_raw = open(cookie_file_path, "r", encoding="utf-8").read()
 
+## 追加视频
+import csv
+
+with open("./option/append.csv", encoding="utf-8-sig", newline='') as f:
+	reader = csv.reader(f)
+	aids = []
+	for row in reader:
+		for sig in row:
+			aids.append(int(sig))
+	_, _, datas = retrieve_video_stat(data_path, aids, sleep_inteval=sleep_inteval, cookie_raw=cookie_raw)
+	for key, item in datas.items():
+		datas[key].update({
+			"id": key,
+			"review": datas[key]["reply"],
+			"pubdate": time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(datas[key]["pubdate"])),
+			"mid": datas[key]["owner"]["mid"],
+			"favorites": datas[key]["favorite"],
+			"author": datas[key]["owner"]["name"],
+			"play": datas[key]["view"]
+			})
+	all_video_info.update(datas)
+
 skipped_aid, invalid_aid = retrieve_video_comment(data_path, all_video_info, credential=credential, force_update=False, sleep_inteval=sleep_inteval)
 if len(skipped_aid)>0:
     logging.warning("被跳过的 aid: " + str(skipped_aid))
 if len(invalid_aid)>0:
     logging.info("无效的 aid: " + str(invalid_aid))
     marshal.dump(invalid_aid, open(os.path.join(data_path, "invalid_aid.pkl"), "wb"))
-
 
 ####################### 计算得分 #########################
 logging.info("汇总评论中")
