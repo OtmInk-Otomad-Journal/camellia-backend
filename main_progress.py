@@ -117,7 +117,7 @@ def mainfunc():
             picking.update(
                 {   
                     "aid": str(picking["aid"]) + "~" + str(dub_count),
-                    "start_time": float(picking["start_time"]) + float(picking["full_time"] * ( dub_count - 1 ))
+                    "start_time": float(picking["start_time"]) + float(picking["full_time"]) * ( dub_count - 1 )
                 }
             )
         muitl_limit.acquire()
