@@ -48,7 +48,7 @@ def turnAid(id: str) -> str:
     """
     from config import api_header
 
-    if ("av" in id) or ("AV" in id):
+    if (id[0:2] == "av") or (id[0:2] == "AV"):
         return id[2:]
     elif "BV" in id:
         site = "https://api.bilibili.com/x/web-interface/view?bvid=" + id
