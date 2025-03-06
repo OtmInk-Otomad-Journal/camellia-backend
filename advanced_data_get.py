@@ -1,4 +1,5 @@
 import logging
+import time
 import traceback
 
 
@@ -187,6 +188,18 @@ def mainfunc():
 
 if __name__ == "__main__":
     logging.basicConfig(
-        format="[%(levelname)s]\t%(message)s", level=logging.DEBUG, encoding="utf-8-sig"
+        format="[%(levelname)s]\t%(message)s",
+        level=logging.DEBUG,
+        encoding="utf-8-sig",
+        filename="log/" + time.strftime("%Y-%m-%d %H-%M-%S") + ".log",
     )
+
+    # 日志记录
+    formatter = logging.Formatter("[%(levelname)s]\t%(message)s")
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel("DEBUG")
+    logger = logging.getLogger()
+    logger.addHandler(console_handler)
+
     advanced_data_get()

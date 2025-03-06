@@ -187,3 +187,5 @@ coverage
 *.sw?
 
 .test.py
+
+.bin

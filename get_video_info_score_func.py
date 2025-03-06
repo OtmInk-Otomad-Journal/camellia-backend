@@ -278,18 +278,18 @@ async def lazy_get_comments(aid: int, credential: Credential) -> List[Dict]:
     懒加载获取评论
     """
     comments = []
-    next = 0
+    next = ""
     while True:
-        c = await comment.get_comments(
+        c = await comment.get_comments_lazy(
             aid, comment.CommentResourceType.VIDEO, next, credential=credential
         )
         assert type(c) is dict
         if "replies" not in c or c["replies"] is None:
             break
         comments.extend(c["replies"])
-        next = c["cursor"]["next"]
         if c["cursor"]["is_end"]:
             break
+        next = c["cursor"]["pagination_reply"]["next_offset"]
         time.sleep(0.25)
     return reply_trimmer(comments)
 
@@ -722,7 +722,7 @@ def apply_response_getter(
             logging.warning(
                 f"未成功获取 {url} 数据: return_code={return_code}, message={result['message']}, 第 {try_times} 次尝试"
             )
-            if return_code == -504:
+            if return_code in [-504, -500]:
                 try_times += 1
                 time.sleep(sleep_inteval * (try_times + 1))
                 continue
