@@ -84,7 +84,7 @@ async def get_data_by_search(
                             .replace("</em>", "")
                         )
                         video["tid"] = 0
-                        video["tag"] = video["tag"].split(",")
+                        video["tag"] = video["tag"].lower().split(",")
                         video["pubdate"] = time.strftime(
                             "%Y-%m-%d %H:%M:%S", time.localtime(video["pubdate"])
                         )
