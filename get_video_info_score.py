@@ -153,6 +153,8 @@ for kw in target_bad_keyword:
 
 ####################### 按分区拉取数据 #########################
 all_video_info: Dict[int, Dict] = {}
+if not isinstance(video_zones, list):
+    video_zones = []
 for video_zone in video_zones:
     video_info_in_zone: Dict[int, Dict] = {}
 
@@ -222,18 +224,24 @@ logging.info(f"按分区收录视频信息获取完成，目前视频总数: {le
 credential = get_credential_from_path(cookie_file_path)
 cookie_raw = open(cookie_file_path, "r", encoding="utf-8").read()
 
-info_package_file_name = f"info_search_{src_date_str[:6]}.json"
-info_package_file_path = os.path.join(info_dir, info_package_file_name)
-if os.path.exists(info_package_file_path):
-    logging.info(f"搜索结果在 {src_date_str}~{dst_date_str} 的视频信息有存档，将读取")
-    with open(info_package_file_path, "r", encoding="utf-8") as f:
-        search_result = json.load(f)
-else:
-    search_result = asyncio.run(
-        get_data_by_search(tag_whitelist, data_yield, cookie_raw)
+search_result = []
+
+for src_date_str, dst_date_str in data_yield:
+    info_package_file_name = f"info_search_{src_date_str[:6]}.json"
+    info_package_file_path = os.path.join(info_dir, info_package_file_name)
+    if os.path.exists(info_package_file_path):
+        logging.info(
+            f"搜索结果在 {src_date_str}~{dst_date_str} 的视频信息有存档，将读取"
+        )
+        with open(info_package_file_path, "r", encoding="utf-8") as f:
+            search_result += json.load(f)
+        continue
+    now_result = asyncio.run(
+        get_data_by_search(tag_whitelist, src_date_str, dst_date_str)
     )
+    search_result += now_result
     with open(info_package_file_path, "w", encoding="utf-8") as f:
-        json.dump(search_result, f, ensure_ascii=False, indent=4)
+        json.dump(now_result, f, ensure_ascii=False, indent=4)
 
 logging.info(f"按搜索结果收录视频信息获取完成，所获视频总数: {len(search_result)}")
 
