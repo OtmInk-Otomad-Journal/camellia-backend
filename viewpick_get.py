@@ -46,9 +46,15 @@ with open(f"./data/viewpicked.csv", "w", encoding="utf-8-sig", newline="") as cs
     def getInfo(aid, score):
         pickAllInfo = retrieve_single_video_stat(video_aid=int(aid))
         picked = pickAllInfo[1]
-        vid_src = get_video(picked["aid"])
+        try:
+            vid_src = get_video(picked["aid"])
+        except:
+            vid_src = "error"
         danmaku_src = get_danmaku(picked["cid"], aid=picked["aid"])  # 弹幕获取
-        exact_time = exactVideoLength(vid_src)
+        try:
+            exact_time = exactVideoLength(vid_src)
+        except:
+            exact_time = picked["duration"]
         start_time, full_time = danmuku_time(
             picked["aid"], exact_time, sep_time, cid=picked["cid"]
         )

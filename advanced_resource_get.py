@@ -35,6 +35,8 @@ def mainfunc():
     # 获取数据
     ranked_list = convert_csv("./data/data.csv")
     mainArr = extract_single_column(ranked_list, "aid", main_end)
+    # 获取包括副榜在内的数据
+    pullArr = extract_single_column(ranked_list, "aid", main_end + side_end)
 
     # 导航导出
     ranks = 0
@@ -61,8 +63,8 @@ def mainfunc():
                 + "\n}}\n"
             )
 
-    # 主榜的视频资源获取
-    for item in mainArr:
+    # 视频资源获取，包括前 55 个
+    for item in pullArr:
         get_video(item)
 
     # Pick Up 的资源获取

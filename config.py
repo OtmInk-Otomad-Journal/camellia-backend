@@ -87,7 +87,7 @@ main_to_side_offset = -1
 
 insert_count = conf["insert_count"]  # 主榜中断个数 # 5
 
-vcodec = "libx264"
+vcodec = "h264_nvenc"
 
 render_format = {"vcodec": vcodec, "video_bitrate": "10000k", "audio_bitrate": "320k"}
 all_render_format = {
