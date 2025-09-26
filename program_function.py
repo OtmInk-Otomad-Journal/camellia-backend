@@ -68,7 +68,7 @@ def copy_video(aid, newaid):
     shutil.copy(f"./video/{aid}.mp4",f"./video/{newaid}.mp4")
 
 # 视频下载
-def get_video(aid, part=1, cid=None):
+def get_video(aid, part=1, cid=None, skipConvert=False):
     d_time = 0
     command = ["./lux"]
     if part > 1:
@@ -107,7 +107,7 @@ def get_video(aid, part=1, cid=None):
             #         ydl.download([f"https://www.bilibili.com/video/av{aid}"])
             # except:
             #     pass
-    if d_time != 0:
+    if d_time != 0 and skipConvert == False:
         any_to_avc(f"./video/{aid}.mp4")
     logging.info(f"av{aid} 视频下载完成")
     return f"./video/{aid}.mp4"

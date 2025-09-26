@@ -64,8 +64,13 @@ def mainfunc():
             )
 
     # 视频资源获取，包括前 55 个
+    downloaded = 0
+    skipConvert = False
     for item in pullArr:
-        get_video(item)
+        downloaded += 1
+        if downloaded > main_end:
+            skipConvert = True
+        get_video(item, skipConvert=skipConvert)
 
     # Pick Up 的资源获取
     allArr = []
