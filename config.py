@@ -29,7 +29,7 @@ base_path = "./AutoData/"  # 视频数据及评论
 delta_days = 11  # 以今天往前的第 delta_days 日开始统计
 range_days = 7  # 统计 range_days 天的数据
 
-selected_day = "251011"  # Debug 等用，指定结束日, YYMMDD 230721
+selected_day = ""  # Debug 等用，指定结束日, YYMMDD 230721
 if selected_day != "":
     select = datetime.datetime.strptime(selected_day, "%y%m%d")
     delta_days = (datetime.datetime.now() - select).days + range_days - 1
@@ -89,7 +89,7 @@ main_to_side_offset = -1
 
 insert_count = conf["insert_count"]  # 主榜中断个数 # 5
 
-vcodec = "h264_nvenc"
+vcodec = "libx264"
 
 render_format = {"vcodec": vcodec, "video_bitrate": "10000k", "audio_bitrate": "320k"}
 all_render_format = {

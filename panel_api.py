@@ -679,7 +679,7 @@ async def online_send_data(type: str = "common"):
         url = os.getenv("ONLINE_PUSH_DATA_URL", "")
 
         data = convert_csv(f"./data/{type}_data.csv")
-        requests.post(url=url, data=json.dumps(data), params={"key": key})
+        requests.post(url=url, data=json.dumps(data), params={"key": key, "type": type})
         return {"code": 0, "msg": None, "data": {}}
     except:
         return {"code": -1, "msg": "未知错误", "data": {}}
