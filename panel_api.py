@@ -186,29 +186,29 @@ async def stop_get_data():
 
 
 @router.get("/backend/pull-data")
-async def pull_data():
+async def pull_data(type: str = "common"):
     """
     获取已经存在的 data.csv 文件，以 JSON 返回
     """
     try:
-        data = convert_csv("./data/data.csv")
+        data = convert_csv(f"./data/{type}_data.csv",)
         return {"code": 0, "msg": None, "data": data}
     except:
         return {"code": -1, "msg": "未知错误", "data": {}}
 
 
 @router.post("/backend/save-data")
-async def save_data(data: list[dict] = Body(...)):
+async def save_data(data: list[dict] = Body(...), type: str = "common"):
     """
     保存 data.csv 文件，并将原始版本重命名
     """
     try:
-        if os.path.exists("./data/data.csv"):
+        if os.path.exists(f"./data/{type}_data.csv"):
             shutil.move(
-                "./data/data.csv",
-                f"./data/backup/data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv",
+                f"./data/{type}_data.csv",
+                f"./data/backup/{type}_data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv",
             )
-        with open("./data/data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
+        with open(f"./data/{type}_data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
             co_header = data[0].keys()
             writer = csv.DictWriter(csvfile, co_header)
             writer.writeheader()
@@ -670,7 +670,7 @@ async def get_fastview(filename: str):
 
 
 @router.get("/backend/online-send-data/")
-async def online_send_data():
+async def online_send_data(type: str = "common"):
     """
     到在线网站上传 data.csv
     """
@@ -678,7 +678,7 @@ async def online_send_data():
         key = os.getenv("ONLINE_AUTH_KEY", "")
         url = os.getenv("ONLINE_PUSH_DATA_URL", "")
 
-        data = convert_csv("./data/data.csv")
+        data = convert_csv(f"./data/{type}_data.csv")
         requests.post(url=url, data=json.dumps(data), params={"key": key})
         return {"code": 0, "msg": None, "data": {}}
     except:
@@ -686,7 +686,7 @@ async def online_send_data():
 
 
 @router.get("/backend/online-get-data/")
-async def online_get_data():
+async def online_get_data(type: str = "common"):
     """
     从在线网站下载 data.csv 并保存
     """
@@ -695,12 +695,12 @@ async def online_get_data():
         key = os.getenv("ONLINE_AUTH_KEY", "")
         data = requests.get(url, params={"key": key}).json()["data"]
 
-        if os.path.exists("./data/data.csv"):
+        if os.path.exists(f"./data/{type}_data.csv"):
             shutil.move(
-                "./data/data.csv",
-                f"./data/backup/data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv",
+                f"./data/{type}_data.csv",
+                f"./data/backup/{type}_data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv",
             )
-        with open("./data/data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
+        with open(f"./data/{type}_data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
             co_header = data[0].keys()
             writer = csv.DictWriter(csvfile, co_header)
             writer.writeheader()

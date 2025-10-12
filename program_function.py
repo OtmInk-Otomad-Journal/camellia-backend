@@ -131,7 +131,8 @@ def get_danmaku(cid, aid=None):
             f"https://comment.bilibili.com/{cid}.xml", headers=api_header
         )
     if danmaku_content.status_code != 200:
-        danmaku_content = ""
+        logging.warning(f"av{aid} 弹幕获取失败")
+        return ""
     else:
         danmaku_content = danmaku_content.content
     with open(f"./danmaku/{cid}.xml", "wb") as danmaku:

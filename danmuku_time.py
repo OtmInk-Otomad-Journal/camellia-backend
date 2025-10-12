@@ -1,4 +1,5 @@
 import logging
+import os
 import numpy as np
 import math
 from lxml import etree
@@ -21,12 +22,13 @@ def danmuku_time(aid,full_time,sep_time,full = False,cid = None):
 
     # 弹幕稀疏计算
     high_danmuku_array = []
-    high_enerbar = etree.parse(f'./danmaku/{cid}.xml')
-    root = high_enerbar.getroot()
-    for element in root.iter():
-        if(element.tag == "d"):
-            dtime = float(element.attrib["p"].split(",")[0])
-            high_danmuku_array.append(dtime)
+    if(os.path.exists(f'./danmaku/{cid}.xml')):
+        high_enerbar = etree.parse(f'./danmaku/{cid}.xml')
+        root = high_enerbar.getroot()
+        for element in root.iter():
+            if(element.tag == "d"):
+                dtime = float(element.attrib["p"].split(",")[0])
+                high_danmuku_array.append(dtime)
     if(high_danmuku_array != []):
         split_num = np.ptp(high_danmuku_array) // 2
         if split_num <= 0:

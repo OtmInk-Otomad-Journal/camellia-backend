@@ -299,6 +299,7 @@ with open("./option/append.csv", encoding="utf-8-sig", newline="") as f:
                 "favorites": datas[key]["favorite"],
                 "author": datas[key]["owner"]["name"],
                 "play": datas[key]["view"],
+                "tag": ["音MAD"]
             }
         )
         logging.info(f"手动追加了 {key}")
@@ -412,7 +413,35 @@ for index in range(recursive_times):
         mid_info.s1_bias = mid_score
 logging.info("计分完成")
 
+###################################
+### 将总榜拆分成多个榜单
+all_rank_datas = {
+    "ytpmv": [],
+    "common": []
+}
+
+for video_aid, video_info in all_video_info.items():
+    if("ytpmv" in video_info["tag"]):
+        all_rank_datas["ytpmv"].append(video_aid)
+    else:
+        all_rank_datas["common"].append(video_aid)
+###################################
+
 aid_and_score: List[Tuple[int, float]] = [(k, v) for k, v in aid_to_score_norm.items()]
+
+all_aid_and_scores = {
+    "ytpmv": [],
+    "common": []
+}
+
+for rank_type, aids in all_rank_datas.items():
+    for k, v in aid_to_score_norm.items():
+        if k in aids:
+            all_aid_and_scores[rank_type].append((k,v))
+
+for rank_type, single_aid_and_score in all_aid_and_scores.items():
+    all_aid_and_scores[rank_type].sort(key=lambda x: -x[1])
+
 aid_and_score.sort(key=lambda x: -x[1])
 if __name__ == "__main__":
     for aid, aid_score in aid_and_score[: main_end + side_end]:
@@ -425,12 +454,15 @@ if __name__ == "__main__":
             target_bad_keyword_first_map,
             all_mid_list,
         )
+
 pull_size = pull_full_list_stat if pull_full_list_stat > 0 else len(aid_and_score)
-selected_aid = [aid for aid, _ in aid_and_score[:pull_size]]
-logging.info(f"将获取排行前 {pull_size} 条视频的信息")
-_, _, selected_video_stat = retrieve_video_stat(
-    data_path, selected_aid, sleep_inteval=sleep_inteval, cookie_raw=cookie_raw
-)
+
+logging.info(f"将获取各排行前 {pull_size} 条视频的信息")
+for rank_type, single_aid_and_score in all_aid_and_scores.items():
+    selected_aid = [aid for aid, _ in single_aid_and_score[:pull_size]]
+    _, _, selected_video_stat = retrieve_video_stat(
+        data_path, selected_aid, sleep_inteval=sleep_inteval, cookie_raw=cookie_raw
+    )
 
 # if os.path.exists(mid_dump_path_bak): os.remove(mid_dump_path_bak)
 if os.path.exists(mid_dump_path_built):

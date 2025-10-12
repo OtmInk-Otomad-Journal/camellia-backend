@@ -29,7 +29,7 @@ base_path = "./AutoData/"  # 视频数据及评论
 delta_days = 11  # 以今天往前的第 delta_days 日开始统计
 range_days = 7  # 统计 range_days 天的数据
 
-selected_day = ""  # Debug 等用，指定结束日, YYMMDD 230721
+selected_day = "251011"  # Debug 等用，指定结束日, YYMMDD 230721
 if selected_day != "":
     select = datetime.datetime.strptime(selected_day, "%y%m%d")
     delta_days = (datetime.datetime.now() - select).days + range_days - 1
@@ -59,6 +59,8 @@ prefilter_comment_less_than = range_days ** (1 / 2)  # 评论大于此数的视�
 pull_full_list_stat = conf[
     "pull_full_list_stat"
 ]  # 拉取前 pull_full_list_stat 个视频的点赞、硬币…数据, -1 为全部 # 100
+
+rank_types = ["ytpmv","common"] # 榜单类型
 
 # !Important! 拉取完整评论*可能*需登录, 见 config_login.py
 # 或者使用下面的 cookie 文件

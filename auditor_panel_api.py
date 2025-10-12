@@ -48,12 +48,12 @@ LAST_CHANGE_TIME = time.strftime("%Y-%m-%d %H-%M-%S")  # 上一次的更改时�
 
 
 @router.get("/backend/pull-data")
-async def pull_data():
+async def pull_data(type: str = "common"):
     """
     获取已经存在的 data.csv 文件，以 JSON 返回
     """
     try:
-        data = convert_csv("./data/data.csv")
+        data = convert_csv(f"./data/{type}_data.csv")
         return {
             "code": 0,
             "msg": None,
@@ -64,7 +64,7 @@ async def pull_data():
 
 
 @router.post("/backend/save-data")
-async def save_data(data: dict = Body(...)):
+async def save_data(data: dict = Body(...), type: str = "common"):
     """
     保存 data.csv 文件，并将原始版本重命名
     """
@@ -72,13 +72,13 @@ async def save_data(data: dict = Body(...)):
         global LAST_CHANGE_TIME
         if data["last_change"] != LAST_CHANGE_TIME:
             return {"code": -3, "msg": "编辑冲突，请刷新页面重试。", "data": {}}
-        if os.path.exists("./data/data.csv"):
+        if os.path.exists(f"./data/{type}_data.csv"):
             shutil.move(
-                "./data/data.csv",
-                f"./data/backup/data {LAST_CHANGE_TIME}.csv",
+                f"./data/{type}_data.csv",
+                f"./data/backup/{type}_data {LAST_CHANGE_TIME}.csv",
             )
         list_data = data["data"]
-        with open("./data/data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
+        with open(f"./data/{type}_data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
             LAST_CHANGE_TIME = time.strftime("%Y-%m-%d %H-%M-%S")
             co_header = list_data[0].keys()
             writer = csv.DictWriter(csvfile, co_header)
@@ -90,13 +90,13 @@ async def save_data(data: dict = Body(...)):
 
 
 @router.get("/down-data/")
-async def down_data(key: str = ""):
+async def down_data(key: str = "", type: str = "common"):
     """
     传回审核后的数据
     """
     if key == os.getenv("ONLINE_AUTH_KEY", ""):
         try:
-            data = convert_csv("./data/data.csv")
+            data = convert_csv(f"./data/{type}_data.csv")
             return {"code": 0, "msg": None, "data": data}
         except:
             return {"code": -1, "msg": "未知错误", "data": {}}
@@ -105,19 +105,19 @@ async def down_data(key: str = ""):
 
 
 @router.post("/push-data/")
-async def down_data(data: list[dict] = Body(...), key: str = ""):
+async def down_data(data: list[dict] = Body(...), key: str = "", type: str = "common"):
     """
     上传审核前的数据
     """
     if key == os.getenv("ONLINE_AUTH_KEY", ""):
         try:
-            if os.path.exists("./data/data.csv"):
+            if os.path.exists(f"./data/{type}_data.csv"):
                 shutil.move(
-                    "./data/data.csv",
-                    f"./data/backup/data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv",
+                    f"./data/{type}_data.csv",
+                    f"./data/backup/{type}_data {time.strftime('%Y-%m-%d %H-%M-%S')}.csv",
                 )
             with open(
-                "./data/data.csv", "w", encoding="utf-8-sig", newline=""
+                f"./data/{type}_data.csv", "w", encoding="utf-8-sig", newline=""
             ) as csvfile:
                 co_header = data[0].keys()
                 writer = csv.DictWriter(csvfile, co_header)

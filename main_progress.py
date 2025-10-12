@@ -19,7 +19,7 @@ def main_progress():
 
 
 def mainfunc():
-    from config import render_prefix, web_prefix, main_end, side_end, muitl_limit
+    from config import render_prefix, web_prefix, main_end, side_end, muitl_limit, rank_types
 
     # 日志记录
     formatter = logging.Formatter("[%(levelname)s]\t%(message)s")
@@ -33,7 +33,6 @@ def mainfunc():
     check_dir()
 
     # 获取数据
-    ranked_list = convert_csv("./data/data.csv")
     calendar_list = convert_csv("./option/calendar.csv")
 
     # 日历合成
@@ -53,50 +52,57 @@ def mainfunc():
         }
         render_video(calendar_data, url, fast=True, audio="./option/calendar/bgm.mp3")
 
-    # 主榜列表单独提取
-    mainArr = extract_single_column(ranked_list, "aid", main_end)
+    rank_type_num = 0
+    for rank_type in rank_types:
+        rank_type_num += 1
+        rank_type_last = True if rank_type_num == len(rank_types) else False
+        ranked_list = convert_csv(f"./data/{rank_type}_data.csv")
 
-    # PICK UP 数据
-    picked_list = []
-    if os.path.exists(f"./data/picked.csv"):
-        picked_list = convert_csv(f"./data/picked.csv")
+        # 主榜列表单独提取
+        mainArr = extract_single_column(ranked_list, "aid", main_end)
 
-    # 主榜段落合成
-    render_times = 0
-    rend_q = []
-    for viding in ranked_list:
-        render_times += 1
-        if render_times > main_end:
-            break
-        if os.path.exists(f"./output/clip/MainRank_{render_times}.mp4"):
-            continue
+        # PICK UP 数据
+        picked_list = []
+        if os.path.exists(f"./data/picked.csv"):
+            picked_list = convert_csv(f"./data/picked.csv")
 
-        if render_times == 1:
+        # 主榜段落合成
+        render_times = 0
+        rend_q = []
+        for viding in ranked_list:
+            render_times += 1
+            if render_times > main_end:
+                break
+            if os.path.exists(f"./output/clip/{rank_type}_MainRank_{render_times}.mp4"):
+                continue
+
+            if render_times == 1:
+                url = f"{render_prefix}/main"
+                viding.update(
+                    {
+                        "output_src": f"./output/clip/{rank_type}_MainRank_1.mp4",
+                        "side_duration": int(float(viding["full_time"]) * 0.6),
+                        "more_data": ranked_list[main_end : main_end + side_end],
+                        "url": url,
+                        "show_staff": rank_type_last
+                    }
+                )
+                muitl_limit.acquire()
+                rend_s = threading.Thread(target=render_video, args=(viding, url))
+                rend_s.start()
+                rend_q.append(rend_s)
+                # render_video(viding,url)
+                continue
+            # 否则正常渲染。
             url = f"{render_prefix}/main"
             viding.update(
-                {
-                    "output_src": f"./output/clip/MainRank_1.mp4",
-                    "side_duration": int(float(viding["full_time"]) * 0.6),
-                    "more_data": ranked_list[main_end : main_end + side_end],
-                    "url": url,
-                }
+                {"output_src": f"./output/clip/{rank_type}_MainRank_{render_times}.mp4", "url": url}
             )
             muitl_limit.acquire()
             rend_s = threading.Thread(target=render_video, args=(viding, url))
             rend_s.start()
             rend_q.append(rend_s)
             # render_video(viding,url)
-            continue
-        # 否则正常渲染。
-        url = f"{render_prefix}/main"
-        viding.update(
-            {"output_src": f"./output/clip/MainRank_{render_times}.mp4", "url": url}
-        )
-        muitl_limit.acquire()
-        rend_s = threading.Thread(target=render_video, args=(viding, url))
-        rend_s.start()
-        rend_q.append(rend_s)
-        # render_video(viding,url)
 
     # PICK UP 合成
     picks = 0

@@ -67,7 +67,12 @@ def AllVideo(main_end, pickArr):
             times += 1
         filePath = filePath + "_" + str(times)
         os.mkdir(filePath)
-    with open("./data/data.csv", "r", encoding="utf-8-sig") as csvfile:
+
+    with open("./data/ytpmv_data.csv", "r", encoding="utf-8-sig") as csvfile:
+        reader = csv.reader(csvfile)
+        ytpmv_rank_column = [row[0] for row in reader]
+
+    with open("./data/common_data.csv", "r", encoding="utf-8-sig") as csvfile:
         reader = csv.reader(csvfile)
         main_rank_column = [row[0] for row in reader]
     AllArr = []
@@ -81,19 +86,19 @@ def AllVideo(main_end, pickArr):
 
     AllArr.append(ffVideo("./template/opening/opening.mp4"))
 
-    AllArr.append(inVideo("./template/pass/passMain.mp4"))
+    AllArr.append(inVideo("./template/pass/passMain_ytpmv.mp4"))
 
-    for clips in range(main_end, insert_count + 1, -1):
-        rank_src = main_rank_column[clips]
-        AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
+    # YTPMV 主榜
+    for clips in range(main_end, 1, -1):
+        rank_src = ytpmv_rank_column[clips]
+        AllArr.append(ffVideo(f"./output/clip/ytpmv_MainRank_{rank_src}.mp4"))
         AllArr.append(ffVideo("./template/pass/pass.mp4"))
-    rank_src = main_rank_column[insert_count + 1]
-    AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
+    rank_src = ytpmv_rank_column[1]
+    AllArr.append(outVideo(f"./output/clip/ytpmv_MainRank_{rank_src}.mp4"))
 
     # Pick Up
-
     if pickArr != []:
-        AllArr.append(ffVideo("./template/pass/passPick.mp4"))
+        AllArr.append(inVideo("./template/pass/passPick.mp4"))
         for clipsto in range(1, len(pickArr)):
             AllArr.append(ffVideo(f"./output/clip/PickRank_{clipsto}.mp4"))
             AllArr.append(ffVideo("./template/pass/pass.mp4"))
@@ -109,18 +114,17 @@ def AllVideo(main_end, pickArr):
     else:
         if pickArr != []:
             AllArr.append(ffVideo(f"./output/clip/PickRank_{len(pickArr)}.mp4"))
-            AllArr.append(ffVideo("./template/pass/passMain.mp4"))
+            AllArr.append(inVideo("./template/pass/passMain_common.mp4"))
         else:
-            AllArr.append(ffVideo("./template/pass/pass.mp4"))
+            AllArr.append(inVideo("./template/pass/passMain_common.mp4"))
 
-    # 倒数主榜
-
-    for clips in range(insert_count, 1, -1):
+    # 综合主榜
+    for clips in range(main_end, 1, -1):
         rank_src = main_rank_column[clips]
-        AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
+        AllArr.append(ffVideo(f"./output/clip/common_MainRank_{rank_src}.mp4"))
         AllArr.append(ffVideo("./template/pass/pass.mp4"))
     rank_src = main_rank_column[1]
-    AllArr.append(ffVideo(f"./output/clip/MainRank_{rank_src}.mp4"))
+    AllArr.append(ffVideo(f"./output/clip/common_MainRank_{rank_src}.mp4"))
 
     onum = 0
     for items in AllArr:
