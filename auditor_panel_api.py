@@ -2,6 +2,7 @@ import time
 import csv
 import os
 import shutil
+import pandas as pd
 
 from dotenv import load_dotenv
 
@@ -88,6 +89,45 @@ async def save_data(data: dict = Body(...), type: str = "common"):
     except Exception as e:
         return {"code": -1, "msg": e, "data": {}}
 
+@router.get("/backend/trans-data")
+async def trans_data(last_change: str = "", src_type: str = "ytpmv", dst_type: str = "common", index: int = 1):
+    """
+    将指定的数据列表的其中一个数据传送到其他数据列表中
+    """
+    try:
+        global LAST_CHANGE_TIME
+        if last_change != LAST_CHANGE_TIME:
+            return {"code": -3, "msg": "编辑冲突，请刷新页面重试。", "data": {}}
+        LAST_CHANGE_TIME = time.strftime("%Y-%m-%d %H-%M-%S")
+        if os.path.exists(f"./data/{src_type}_data.csv"):
+            shutil.copy(
+                f"./data/{src_type}_data.csv",
+                f"./data/backup/{src_type}_data {LAST_CHANGE_TIME}.csv",
+            )
+        if os.path.exists(f"./data/{dst_type}_data.csv"):
+            shutil.copy(
+                f"./data/{dst_type}_data.csv",
+                f"./data/backup/{dst_type}_data {LAST_CHANGE_TIME}.csv",
+            )
+        # 将原文件中的删除，留下那一行的数据
+        df = pd.read_csv(f"./data/{src_type}_data.csv")
+        row_data = df.iloc[index].copy()
+        df_cleaned = df.drop(index)
+        df_cleaned = df_cleaned.sort_values('score', ascending=False)
+        # 更新原文件的'ranking'列
+        df_cleaned['ranking'] = range(1, len(df_cleaned) + 1)
+        df_cleaned.to_csv(f"./data/{src_type}_data.csv", index=False)
+        # 增添到目标文件并排序
+        df_target = pd.read_csv(f"./data/{dst_type}_data.csv")
+        df_target = pd.concat([df_target, row_data.to_frame().T], ignore_index=True)
+        df_sorted = df_target.sort_values('score', ascending=False)
+        # 更新文件的'ranking'列
+        df_sorted['ranking'] = range(1, len(df_sorted) + 1)
+        df_sorted.to_csv(f"./data/{dst_type}_data.csv", index=False)
+
+        return {"code": 0, "msg": None, "data": {}}
+    except Exception as e:
+        return {"code": -1, "msg": e, "data": {}}
 
 @router.get("/down-data/")
 async def down_data(key: str = "", type: str = "common"):
