@@ -693,7 +693,7 @@ async def online_get_data(type: str = "common"):
     try:
         url = os.getenv("ONLINE_DOWN_DATA_URL", "")
         key = os.getenv("ONLINE_AUTH_KEY", "")
-        data = requests.get(url, params={"key": key}).json()["data"]
+        data = requests.get(url, params={"key": key, "type": type}).json()["data"]
 
         if os.path.exists(f"./data/{type}_data.csv"):
             shutil.move(
