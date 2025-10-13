@@ -9,6 +9,7 @@ from config import read_format, usedTime, render_format, insert_count, all_rende
 
 tempPath = f"./temp"
 
+rank_types = ["ytpmv", "common"]
 
 def duration(file, offset):
     return float(ffmpeg.probe(file)["streams"][0]["duration"]) + offset
@@ -151,12 +152,17 @@ def AllVideo(main_end, pickArr):
     logging.info(f"正在转移文件至 {usedTime} 文件夹中...")
     if os.path.exists("./option/canbin.mp4"):
         shutil.move("./option/canbin.mp4", f"{filePath}/canbin_{usedTime}.mp4")
-    for clips in range(main_end, 0, -1):
-        rank_src = main_rank_column[clips]
-        shutil.move(
-            f"./output/clip/MainRank_{rank_src}.mp4",
-            f"{filePath}/MainRank_{rank_src}.mp4",
-        )
+    for rank_type in rank_types:
+        if rank_type == "ytpmv":
+            main_rank_column = ytpmv_rank_column
+        else:
+            main_rank_column = main_rank_column
+        for clips in range(main_end, 0, -1):
+            rank_src = main_rank_column[clips]
+            shutil.move(
+                f"./output/clip/{rank_type}_MainRank_{rank_src}.mp4",
+                f"{filePath}/{rank_type}_MainRank_{rank_src}.mp4",
+            )
     for clipsto in range(1, len(pickArr) + 1):
         shutil.move(
             f"./output/clip/PickRank_{clipsto}.mp4",
