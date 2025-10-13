@@ -458,11 +458,12 @@ if __name__ == "__main__":
 pull_size = pull_full_list_stat if pull_full_list_stat > 0 else len(aid_and_score)
 
 logging.info(f"将获取各排行前 {pull_size} 条视频的信息")
+selected_aid = []
 for rank_type, single_aid_and_score in all_aid_and_scores.items():
-    selected_aid = [aid for aid, _ in single_aid_and_score[:pull_size]]
-    _, _, selected_video_stat = retrieve_video_stat(
-        data_path, selected_aid, sleep_inteval=sleep_inteval, cookie_raw=cookie_raw
-    )
+    selected_aid += [aid for aid, _ in single_aid_and_score[:pull_size]]
+_, _, selected_video_stat = retrieve_video_stat(
+    data_path, selected_aid, sleep_inteval=sleep_inteval, cookie_raw=cookie_raw
+)
 
 # if os.path.exists(mid_dump_path_bak): os.remove(mid_dump_path_bak)
 if os.path.exists(mid_dump_path_built):
