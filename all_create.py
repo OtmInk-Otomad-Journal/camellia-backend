@@ -11,18 +11,23 @@ tempPath = f"./temp"
 
 rank_types = ["ytpmv", "common"]
 
+overall_time = 0
+
 def duration(file, offset):
     return float(ffmpeg.probe(file)["streams"][0]["duration"]) + offset
 
 
 def ffVideo(file):
+    global overall_time
     vi = ffmpeg.input(file, **read_format)
     viv = vi.video
     aud = vi.audio
+    overall_time += duration(file, 0)
     return [viv, aud]
 
 
 def inVideo(file):
+    global overall_time
     name = file.split("/")[-1]
     vi = ffmpeg.input(file, **read_format)
     viv = vi.filter("fade", st=0, d=0.5)
@@ -30,10 +35,12 @@ def inVideo(file):
         ffmpeg.output(viv, f"{tempPath}/{name}", **render_format).run()
     viw = ffmpeg.input(f"{tempPath}/{name}", **read_format)
     aud = vi.audio
+    overall_time += duration(file, 0)
     return [viw, aud]
 
 
 def inoutVideo(file):
+    global overall_time
     name = file.split("/")[-1]
     vi = ffmpeg.input(file, **read_format)
     viv = vi.filter("fade", st=0, d=0.5)
@@ -42,10 +49,12 @@ def inoutVideo(file):
         ffmpeg.output(viv, f"{tempPath}/{name}", **render_format).run()
     viw = ffmpeg.input(f"{tempPath}/{name}", **read_format)
     aud = vi.audio
+    overall_time += duration(file, 0)
     return [viw, aud]
 
 
 def outVideo(file):
+    global overall_time
     name = file.split("/")[-1]
     vi = ffmpeg.input(file, **read_format)
     viv = vi.filter("fade", t="out", st=duration(file, -0.5), d=0.5)
@@ -53,10 +62,21 @@ def outVideo(file):
         ffmpeg.output(viv, f"{tempPath}/{name}", **render_format).run()
     viw = ffmpeg.input(f"{tempPath}/{name}", **read_format)
     aud = vi.audio
+    overall_time += duration(file, 0)
     return [viw, aud]
 
+def writePortalTime(time, desc):
+    from config import usedTime
+    if not os.path.exists(f"./fast_view/portal_{usedTime}.txt"):
+        open(f"./fast_view/portal_{usedTime}.txt", "w", encoding="utf-8-sig").close()
+    # 格式为 MM:SS
+    format_time = f"{int(time//60):02d}:{int(time%60):02d}"
+    with open(f"./fast_view/portal_{usedTime}.txt", "a", encoding="utf-8-sig") as fast:
+        fast.write(f"{format_time} {desc}\n")
 
 def AllVideo(main_end, pickArr):
+    global overall_time
+    overall_time = 0
     logging.info(f"进入视频总合成环节")
     filePath = f"./output/clip/{usedTime}"
 
@@ -82,10 +102,19 @@ def AllVideo(main_end, pickArr):
         for ads in files:
             AllArr.append(inoutVideo(f"./option/ads/{ads}"))
             trueFiles.append(ads)
+    if len(trueFiles) != 0:
+        logging.info(f"已插入 {len(trueFiles)} 个广告")
+        writePortalTime(0, "广告环节")
+
+    writePortalTime(overall_time, "小日历")
 
     AllArr.append(inoutVideo("./output/clip/Calendar.mp4"))
 
+    writePortalTime(overall_time, "OP")
+
     AllArr.append(ffVideo("./template/opening/opening.mp4"))
+
+    writePortalTime(overall_time, "YTPMV 区域")
 
     AllArr.append(inVideo("./template/pass/passMain_ytpmv.mp4"))
 
@@ -99,6 +128,7 @@ def AllVideo(main_end, pickArr):
 
     # Pick Up
     if pickArr != []:
+        writePortalTime(overall_time, "Pick Up 区域")
         AllArr.append(inVideo("./template/pass/passPick.mp4"))
         for clipsto in range(1, len(pickArr)):
             AllArr.append(ffVideo(f"./output/clip/PickRank_{clipsto}.mp4"))
@@ -109,14 +139,18 @@ def AllVideo(main_end, pickArr):
         else:
             # AllArr[-1] = ffmpeg.filter(AllArr[-1],"fade",t="out",st="d-0.5",d=0.5,alpha=1)
             pass
+        writePortalTime(overall_time, "嘉宾环节")
         AllArr.append(inoutVideo("./template/pass/passCanbin.mp4"))
         AllArr.append(inoutVideo("./option/canbin.mp4"))
-        AllArr.append(inVideo("./template/pass/passMain.mp4"))
+        writePortalTime(overall_time, "综合 区域")
+        AllArr.append(inVideo("./template/pass/passMain_common.mp4"))
     else:
         if pickArr != []:
             AllArr.append(ffVideo(f"./output/clip/PickRank_{len(pickArr)}.mp4"))
+            writePortalTime(overall_time, "综合 区域")
             AllArr.append(inVideo("./template/pass/passMain_common.mp4"))
         else:
+            writePortalTime(overall_time, "综合 区域")
             AllArr.append(inVideo("./template/pass/passMain_common.mp4"))
 
     # 综合主榜
