@@ -14,7 +14,7 @@ def mainfunc():
     """
     获取周刊数据，将生成一个 data.csv 文件
     """
-    from config import main_end, side_end, sep_time, web_prefix
+    from config import main_end, side_end, sep_time, web_prefix, pull_full_list_stat
 
     formatter = logging.Formatter("[%(levelname)s]\t%(message)s")
     console_handler = logging.StreamHandler()
@@ -99,6 +99,7 @@ def mainfunc():
             writer.writeheader()
             vid_list = []
             for video_aid in aids:
+                pull_size = pull_full_list_stat if pull_full_list_stat > 0 else len(aids)
                 video_info = all_video_info[video_aid]
                 video_stat = selected_video_stat.get(video_aid, {})
                 if int(video_aid) in blackArr:
@@ -147,7 +148,7 @@ def mainfunc():
                 vid = html_unescape(vid)
                 ranking += 1
                 after_dict = {"ranking": ranking}
-                if ranking <= main_end + side_end + 15:
+                if ranking <= pull_size:
                     try:
                         pic_src = get_img(
                             vid["aid"]
@@ -165,7 +166,7 @@ def mainfunc():
                             "web_prefix": web_prefix,
                         }
                     )
-                    if ranking <= main_end + 5:
+                    if ranking <= pull_size:
                         vid_src = f"./video/{vid['aid']}.mp4"  # get_video(vid["aid"]) 不再在这个时候下载
                         danmaku_src = get_danmaku(vid["cid"], aid=vid["aid"])  # 弹幕获取
                         exact_time = float(vid["duration"])  # exactVideoLength(vid_src)
