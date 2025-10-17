@@ -146,7 +146,7 @@ def AllVideo(main_end, pickArr):
         AllArr.append(inVideo("./template/pass/passMain_common.mp4"))
     else:
         if pickArr != []:
-            AllArr.append(ffVideo(f"./output/clip/PickRank_{len(pickArr)}.mp4"))
+            AllArr.append(outVideo(f"./output/clip/PickRank_{len(pickArr)}.mp4"))
             writePortalTime(overall_time, "综合 区域")
             AllArr.append(inVideo("./template/pass/passMain_common.mp4"))
         else:
