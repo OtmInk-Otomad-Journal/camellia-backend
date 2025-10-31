@@ -520,10 +520,10 @@ def calc_aid_score(
         )
         comment_score_summary[comment_mid.mid].append(comment_score * multiply_value)
 
-    # aid_score = sum([calc_median(v)*math.sqrt(len(v)) for k,v in comment_score_summary.items()])
-    aid_score = sum(
+    aid_score = sum([calc_median(v)*math.sqrt(len(v)) for k,v in comment_score_summary.items()])
+    """ aid_score = sum(
         [sum(v) for k, v in comment_score_summary.items()]
-    )  # 不抑制重复评论的算法
+    ) """  # 不抑制重复评论的算法
 
     aid_favorite = video_info["favorites"]
     # aid_score /= math.log2(len(comment_list)+2)
