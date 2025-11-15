@@ -386,7 +386,7 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
         command = [
             "ffmpeg", "-i",
             f"./video/{aid}.mp4",
-            "-ss", new_start_time,
+            "-ss", str(new_start_time),
             "-t", str(actual_duration),
             "-vf", scale_src,
             "-c:v", vcodec,
@@ -398,7 +398,7 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
         if os.path.exists(video_dst):
             os.remove(video_dst) # 必须重新生成，防止出错
 
-        logging.info(f"正在裁剪 av{aid} 视频片段，总时长 {duration} ：{new_start_time} 秒开始，时长 {actual_duration} 秒...")
+        logging.info(f"正在裁剪 av{aid} 视频片段，总时长 {duration} : {new_start_time} 秒开始，时长 {actual_duration} 秒...")
 
         process = subprocess.Popen(
             command,
