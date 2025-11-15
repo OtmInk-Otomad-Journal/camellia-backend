@@ -27,7 +27,7 @@ def render_video(data, url, audio=None, fast=False):
         merge_list: list[VideoChunk] = []
 
         for vid_chunk in video_chunks:
-            output_src = f"{vid_chunk.start_time}" + data["output_src"]
+            output_src = data["output_src"].replace(".mp4", f"_part_{int(vid_chunk.start_time)}.mp4")
             logging.info(f"裁剪视频片段: {vid_chunk.filepath} (起始时间: {vid_chunk.start_time}, 时长: {vid_chunk.duration}), 输出至: {output_src}")
             data.update({
                          "url": url,
