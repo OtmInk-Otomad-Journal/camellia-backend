@@ -19,7 +19,7 @@ def main_progress():
 
 
 def mainfunc():
-    from config import render_prefix, web_prefix, main_end, side_end, muitl_limit, rank_types
+    from config import render_prefix, web_prefix, main_end, side_end, rank_types
 
     # 日志记录
     formatter = logging.Formatter("[%(levelname)s]\t%(message)s")
@@ -87,7 +87,6 @@ def mainfunc():
                         "show_staff": rank_type_last
                     }
                 )
-                muitl_limit.acquire()
                 rend_s = threading.Thread(target=render_video, args=(viding, url))
                 rend_s.start()
                 rend_q.append(rend_s)
@@ -98,7 +97,6 @@ def mainfunc():
             viding.update(
                 {"output_src": f"./output/clip/{rank_type}_MainRank_{render_times}.mp4", "url": url}
             )
-            muitl_limit.acquire()
             rend_s = threading.Thread(target=render_video, args=(viding, url))
             rend_s.start()
             rend_q.append(rend_s)
@@ -126,7 +124,6 @@ def mainfunc():
                     "start_time": float(picking["start_time"]) + float(picking["full_time"]) * ( dub_count - 1 )
                 }
             )
-        muitl_limit.acquire()
         rend_s = threading.Thread(target=render_video, args=(picking, url))
         rend_s.start()
         rend_q.append(rend_s)
