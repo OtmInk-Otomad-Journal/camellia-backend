@@ -114,7 +114,7 @@ smooth_render_format = {
 muitl_limit = threading.Semaphore(3)
 
 render_max_threading_count = 1  # 正常渲染下最大线程数
-slip_second = 20
+slip_second = 20 # 每分块的时长
 
 render_fast_threading_count = 10  # 快速渲染下线程数
 

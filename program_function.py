@@ -1,3 +1,4 @@
+import hashlib
 import shutil
 import requests
 import logging
@@ -15,6 +16,8 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 from haishoku.haishoku import Haishoku
+
+from dataclasses import dataclass
 
 # import yt_dlp
 
@@ -323,7 +326,8 @@ def audio_process(aid, start_time=0, duration=10000, audio=None):
         sound = pydub.AudioSegment.from_file(audio)
         sound = sound[int(start_time) : int(start_time + duration)]  # 切片
     else:
-        sound = pydub.AudioSegment.from_file(f"./videoc/{aid}.mp4")
+        sound = pydub.AudioSegment.from_file(f"./video/{aid}.mp4")
+        sound = sound[int(start_time) : int(start_time + duration)]  # 切片
     silent_time = 500
     silent = pydub.AudioSegment.silent(duration=silent_time)
 
@@ -347,12 +351,17 @@ def audio_process(aid, start_time=0, duration=10000, audio=None):
     sound.export(f"./audio/{aid}.mp3", format="mp3", bitrate="320k")
     return f"./audio/{aid}.mp3"
 
+@dataclass
+class VideoChunk:
+    start_time: float
+    duration: float
+    filepath: str
 
-def video_cut(aid, start_time=0, duration=10):
+def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
     """
     裁剪视频并规格化尺寸。
     """
-    from config import screenRatio, vcodec
+    from config import screenRatio, vcodec, slip_second
 
     videoSourceSize = ffmpeg.probe(f"./video/{aid}.mp4")["streams"][0]
     videoRatio = videoSourceSize["width"] / videoSourceSize["height"]
@@ -365,25 +374,32 @@ def video_cut(aid, start_time=0, duration=10):
         should_width = videoSourceSize["height"] * screenRatio
         padding = (should_width - videoSourceSize["width"]) / 2
         scale_src = f"pad={should_width}:{videoSourceSize['height']}:{padding}:0:black"
-    command = [
-        "ffmpeg",
-        "-i",
-        f"./video/{aid}.mp4",
-        "-ss",
-        str(start_time),
-        "-t",
-        str(duration),
-        "-vf",
-        scale_src,
-        "-c:v",
-        vcodec,
-        "-c:a",
-        "aac",
-        "-ar",
-        "44100",
-        f"./videoc/{aid}.mp4",
-    ]
-    if not os.path.exists(f"./videoc/{aid}.mp4"):
+    
+    cut_result = []
+
+    for new_start_time in range(int(start_time), int(start_time + duration), slip_second):
+        video_dst = f"./videoc/{aid}_{new_start_time}.mp4"
+        if new_start_time + slip_second > start_time + duration:
+            actual_duration = (start_time + duration) - new_start_time
+        else:
+            actual_duration = slip_second
+        command = [
+            "ffmpeg", "-i",
+            f"./video/{aid}.mp4",
+            "-ss", new_start_time,
+            "-t", str(actual_duration),
+            "-vf", scale_src,
+            "-c:v", vcodec,
+            "-c:a", "aac",
+            "-ar", "44100",
+            video_dst,
+        ]
+
+        if os.path.exists(video_dst):
+            os.remove(video_dst) # 必须重新生成，防止出错
+
+        logging.info(f"正在裁剪 av{aid} 视频片段：{new_start_time} 秒开始，时长 {actual_duration} 秒...")
+
         process = subprocess.Popen(
             command,
             stderr=subprocess.PIPE,
@@ -397,7 +413,52 @@ def video_cut(aid, start_time=0, duration=10):
             if len(info) != 0:
                 logging.info(info.replace("\n", ""))
 
-    return f"./videoc/{aid}.mp4"
+        cut_result.append(
+            VideoChunk(
+                start_time=new_start_time,
+                duration=actual_duration,
+                filepath=video_dst
+            )
+        )
+
+    return cut_result
+
+def video_merge(chunks: list[VideoChunk], audio_src: str, output_src: str):
+    """
+    合并视频片段
+    """
+    from config import vcodec
+
+    hash = hashlib.md5(str(chunks).encode()).hexdigest()
+    # 将合并列表写入临时文件
+    with open(f"./temp/merge_list_{hash}.txt", "w", encoding="utf-8-sig") as merge_file:
+        for chunk in chunks:
+            merge_file.write(f"file '{chunk.filepath}'\n")
+    
+    command = [
+        "ffmpeg", "-f", "concat", "-safe", "0", "-i",
+        f"./temp/merge_list_{hash}.txt",
+        "-i", audio_src,
+        "-c:v", vcodec,
+        "-c:a", "aac",
+        "-ar", "44100",
+        output_src,
+    ]
+
+    logging.info(f"正在合并视频片段...")
+
+    process = subprocess.Popen(
+        command,
+        stderr=subprocess.PIPE,
+        text=True,
+        encoding="utf-8-sig",
+    )
+
+    for info in iter(process.stderr.readline, "b"):
+        if process.poll() is not None:
+            break
+        if len(info) != 0:
+            logging.info(info.replace("\n", ""))
 
 
 def intilize_dict(given_dict: dict) -> dict:

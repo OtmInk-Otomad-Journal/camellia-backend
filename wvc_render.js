@@ -8,7 +8,9 @@ const data = require(src[0]);
 const wvc = new WebVideoCreator();
 
 wvc.config({
-  mp4Encoder: VIDEO_ENCODER.CPU.H264,
+  browserVersion: "141.0.7390.108",
+  browserUseGPU: false,
+  compatibleRenderingMode: true,
 });
 
 // 创建单幕视频
@@ -17,14 +19,13 @@ const video = wvc.createSingleVideo({
   width: 1920,
   height: 1080,
   fps: 60,
-  duration: data.full_time * 1000,
+  duration: data.chunk_time * 1000,
   outputPath: data.output_src,
+  startTime: data.start_time * 1000,
   frameQuality: 100,
   // 码率
   audioBitrate: "320k",
   videoBitrate: "10000k",
-  // GPU 加速
-  browserUseGPU: true,
   // browserFrameRateLimit: false,
   // Cli 的进度条
   showProgress: true,
@@ -36,11 +37,11 @@ const video = wvc.createSingleVideo({
   },
 });
 
-video.addAudio({
-  path: data.audio_src,
-  loop: false,
-  volume: 100,
-});
+// video.addAudio({
+//   path: data.audio_src,
+//   loop: false,
+//   volume: 100,
+// });
 
 // 监听合成完成事件
 video.once("completed", (result) => {
