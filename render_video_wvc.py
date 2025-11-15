@@ -11,12 +11,14 @@ def render_video(data, url, audio=None, fast=False):
         start_time = data["start_time"]
         full_duration = data["full_time"]
         if not fast:
-            logging.info("正在裁剪视频...")
+            logging.info(f"正在裁剪 av{data['aid']} 视频...")
             video_chunks = video_cut(data["aid"], float(start_time), float(full_duration))
         else:
             video_chunks = [VideoChunk(
                 start_time=float(start_time),
                 duration=float(full_duration),
+                front_reserved_time=0,
+                back_reserved_time=0,
                 filepath=""
             )]
         logging.info("正在处理音频...")
@@ -36,6 +38,8 @@ def render_video(data, url, audio=None, fast=False):
                          "video_src": vid_chunk.filepath,
                          "start_time": vid_chunk.start_time,
                          "chunk_time": vid_chunk.duration,
+                         "front_reserved_time": vid_chunk.front_reserved_time,
+                         "back_reserved_time": vid_chunk.back_reserved_time,
                          "output_src": output_src
                         })
 
@@ -64,6 +68,8 @@ def render_video(data, url, audio=None, fast=False):
             merge_list.append(VideoChunk(
                 start_time=vid_chunk.start_time,
                 duration=vid_chunk.duration,
+                front_reserved_time=vid_chunk.front_reserved_time,
+                back_reserved_time=vid_chunk.back_reserved_time,
                 filepath=output_src))
         
         # 合并音频和视频片段
@@ -71,6 +77,9 @@ def render_video(data, url, audio=None, fast=False):
         video_merge(merge_list, audio_file, final_output_src)
 
         logging.info(f"渲染完成，输出文件: {final_output_src}")
+
+        if not os.path.exists(final_output_src):
+            raise Exception(f"{final_output_src} 渲染失败，未生成输出文件，请检查日志。")
 
         # 清理切片文件
         for merge_chunk in merge_list:

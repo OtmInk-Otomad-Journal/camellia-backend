@@ -354,6 +354,8 @@ def audio_process(aid, start_time=0, duration=10000, audio=None):
 @dataclass
 class VideoChunk:
     start_time: float
+    front_reserved_time: float # 前置保留时间
+    back_reserved_time: float # 后置保留时间
     duration: float
     filepath: str
 
@@ -365,6 +367,7 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
 
     videoSourceSize = ffmpeg.probe(f"./video/{aid}.mp4")["streams"][0]
     videoRatio = videoSourceSize["width"] / videoSourceSize["height"]
+    logging.info(f"视频原始尺寸: {videoSourceSize['width']}x{videoSourceSize['height']}，比例: {videoRatio:.2f}，目标比例: {screenRatio:.2f}")
     # 因为时长有波动，必须使用原生 ffmpeg。
     if videoRatio >= screenRatio:
         should_height = videoSourceSize["width"] / screenRatio
@@ -378,15 +381,30 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
     cut_result = []
 
     for new_start_time in range(int(start_time), int(start_time + duration), slip_second):
+        front_reserved = 0 # 预留前几秒，防止切割点出现黑屏等问题
+        back_reserved = 0 # 预留后几秒，防止切割点出现黑屏等问题
+
         video_dst = f"./videoc/{aid}_{new_start_time}.mp4"
-        if new_start_time + slip_second > start_time + duration:
+        if new_start_time + slip_second >= start_time + duration:
             actual_duration = (start_time + duration) - new_start_time
+            # 此时也表明是最后一段切割
         else:
             actual_duration = slip_second
+            back_reserved = 1
+
+        actual_start_time = new_start_time
+
+        if(new_start_time != start_time):
+            front_reserved = 1
+            actual_start_time -= front_reserved
+
+        avaliable_duration = actual_duration
+        actual_duration += front_reserved + back_reserved
+
         command = [
             "ffmpeg", "-i",
             f"./video/{aid}.mp4",
-            "-ss", str(new_start_time),
+            "-ss", str(actual_start_time),
             "-t", str(actual_duration),
             "-vf", scale_src,
             "-c:v", vcodec,
@@ -398,7 +416,7 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
         if os.path.exists(video_dst):
             os.remove(video_dst) # 必须重新生成，防止出错
 
-        logging.info(f"正在裁剪 av{aid} 视频片段，总时长 {duration} : {new_start_time} 秒开始，时长 {actual_duration} 秒...")
+        logging.info(f"正在裁剪 av{aid} 视频片段，总时长 {duration} : 应于 {new_start_time} 秒开始，提前 {front_reserved} 秒，后放 {back_reserved} 秒, 时长 {actual_duration} 秒...")
 
         process = subprocess.Popen(
             command,
@@ -416,7 +434,9 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
         cut_result.append(
             VideoChunk(
                 start_time=new_start_time,
-                duration=actual_duration,
+                duration=avaliable_duration,
+                front_reserved_time=front_reserved,
+                back_reserved_time=back_reserved,
                 filepath=video_dst
             )
         )
@@ -431,17 +451,17 @@ def video_merge(chunks: list[VideoChunk], audio_src: str, output_src: str):
 
     hash = hashlib.md5(str(chunks).encode()).hexdigest()
     # 将合并列表写入临时文件
-    with open(f"./temp/merge_list_{hash}.txt", "w", encoding="utf-8-sig") as merge_file:
+    with open(f"./temp/merge_list_{hash}.txt", "w", encoding="utf-8") as merge_file:
         for chunk in chunks:
-            merge_file.write(f"file '{chunk.filepath}'\n")
+            # 写入绝对路径以防 ffmpeg 报错
+            merge_file.write(f"file '{os.path.abspath(chunk.filepath)}'\n")
     
     command = [
         "ffmpeg", "-f", "concat", "-safe", "0", "-i",
         f"./temp/merge_list_{hash}.txt",
         "-i", audio_src,
-        "-c:v", vcodec,
-        "-c:a", "aac",
-        "-ar", "44100",
+        "-c:v", "copy",
+        "-c:a", "copy",
         output_src,
     ]
 

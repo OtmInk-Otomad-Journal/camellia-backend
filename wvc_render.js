@@ -31,8 +31,19 @@ const video = wvc.createSingleVideo({
   showProgress: true,
   pagePrepareFn: async (page) => {
     const _page = page.target;
-    await _page.evaluate(function (data) {
-      setTimeout(inject_wvc(data), 1000);
+    await _page.evaluate((data) => {
+      // 直到inject_wvc是存在的函数，再执行inject_wvc
+      return new Promise((resolve) => {
+        const checkInject = () => {
+          if (typeof inject_wvc === "function") {
+            inject_wvc(data);
+            resolve(true);
+          } else {
+            setTimeout(checkInject, 100);
+          }
+        };
+        checkInject();
+      });
     }, data);
   },
 });
