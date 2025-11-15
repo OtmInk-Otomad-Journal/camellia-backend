@@ -41,6 +41,8 @@ def render_video(data, url, audio=None, fast=False):
             json_name = f"./temp/{identify_code}.json"
             with open(json_name, "w", encoding="utf-8-sig") as temp_json:
                 json.dump(data, temp_json)
+            if os.path.exists(output_src):
+                os.remove(output_src)  # 必须重新生成，防止出错
             command = ["node", "wvc_render.js", json_name]
             logging.info("转交 Node.js 渲染")
 
