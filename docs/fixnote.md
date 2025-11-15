@@ -11,7 +11,7 @@
 对 `node_modules/web-video-creator/core/CaptureContext.js` 的第 645 行进行修改：
 
 ```javascript
-endTime: Math.min(e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime") || Infinity, this.config.duration + this.startTime),
+endTime: Math.min(e.getNumberAttribute("end-time") || e.getNumberAttribute("endTime") || Infinity, this.config.duration + this.startTime + 1000),
 ```
 
 ## MacOS 环境下的浏览器渲染报错
