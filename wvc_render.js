@@ -21,7 +21,7 @@ const video = wvc.createSingleVideo({
   fps: 60,
   duration: data.chunk_time * 1000,
   outputPath: data.output_src,
-  startTime: data.start_time * 1000,
+  startTime: Math.floor(data.start_time * 1000),
   frameQuality: 100,
   // 码率
   audioBitrate: "320k",
