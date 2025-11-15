@@ -111,7 +111,7 @@ smooth_render_format = {
     # "video_bitrate" : "4500k",
     "audio_bitrate": "320k",
 }
-muitl_limit = threading.Semaphore(3)
+muitl_limit = threading.Semaphore(1)
 
 render_max_threading_count = 1  # 正常渲染下最大线程数
 slip_second = 20 # 每分块的时长
