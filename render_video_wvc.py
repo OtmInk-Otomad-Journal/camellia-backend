@@ -26,8 +26,10 @@ def render_video(data, url, audio=None, fast=False):
 
         merge_list: list[VideoChunk] = []
 
+        final_output_src = data["output_src"]
+
         for vid_chunk in video_chunks:
-            output_src = data["output_src"].replace(".mp4", f"_part_{int(vid_chunk.start_time)}.mp4")
+            output_src = final_output_src.replace(".mp4", f"_part_{int(vid_chunk.start_time)}.mp4")
             logging.info(f"裁剪视频片段: {vid_chunk.filepath} (起始时间: {vid_chunk.start_time}, 时长: {vid_chunk.duration}), 输出至: {output_src}")
             data.update({
                          "url": url,
@@ -66,9 +68,9 @@ def render_video(data, url, audio=None, fast=False):
         
         # 合并音频和视频片段
         logging.info("正在合并视频片段和音频...")
-        video_merge(merge_list, audio_file, data["output_src"])
+        video_merge(merge_list, audio_file, final_output_src)
 
-        logging.info(f"渲染完成，输出文件: {data['output_src']}")
+        logging.info(f"渲染完成，输出文件: {final_output_src}")
 
         # 清理切片文件
         for merge_chunk in merge_list:
