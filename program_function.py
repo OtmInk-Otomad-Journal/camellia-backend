@@ -353,7 +353,8 @@ def audio_process(aid, start_time=0, duration=10000, audio=None):
 
 @dataclass
 class VideoChunk:
-    start_time: float
+    start_time: float # 相对于原视频的起始时间
+    render_start_time: float # 实际渲染起始时间
     front_reserved_time: float # 前置保留时间
     back_reserved_time: float # 后置保留时间
     duration: float
@@ -380,6 +381,7 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
     
     cut_result = []
 
+    render_start_time = 0
     for new_start_time in range(int(start_time), int(start_time + duration), slip_second):
         front_reserved = 0 # 预留前几秒，防止切割点出现黑屏等问题
         back_reserved = 0 # 预留后几秒，防止切割点出现黑屏等问题
@@ -435,11 +437,14 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
             VideoChunk(
                 start_time=new_start_time,
                 duration=avaliable_duration,
+                render_start_time=render_start_time,
                 front_reserved_time=front_reserved,
                 back_reserved_time=back_reserved,
                 filepath=video_dst
             )
         )
+
+        render_start_time += avaliable_duration
 
     return cut_result
 

@@ -8,9 +8,9 @@ const data = require(src[0]);
 const wvc = new WebVideoCreator();
 
 wvc.config({
-  browserVersion: "141.0.7390.108",
-  browserUseGPU: false,
-  compatibleRenderingMode: true,
+  // browserVersion: "141.0.7390.108",
+  browserUseGPU: true,
+  // compatibleRenderingMode: true,
 });
 
 // 创建单幕视频
