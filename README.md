@@ -55,7 +55,7 @@ npm install
 
 将本项目的根目录使用合适的引擎进行 HTTP 转发，将地址放在 `.env` 的 `WEB_PREFIX` 字段中，用于网页渲染的本地文件获取地址，需要包含最后一个斜杠。
 
-将[前端](https://github.com/OtmInk-Otomad-Journal/camellia-frontend)部署在合适的目录，并使用合适的引擎架设网页服务器，用于网页渲染的在线模板端，将地址放在 `.env` 的 `RENDER_PREFIX` 字段中，需要包含最后一个斜杠。
+将[前端](https://github.com/OtmInk-Otomad-Journal/camellia-frontend)部署在合适的目录，并使用合适的引擎架设网页服务器，用于网页渲染的在线模板端，将地址放在 `.env` 的 `RENDER_PREFIX` 字段中，**无需包含最后一个斜杠**。
 
 `PANEL_PREFIX` 将用于管理面板前端的后端访问。
 
