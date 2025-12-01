@@ -7,11 +7,21 @@ const data = require(src[0]);
 
 const wvc = new WebVideoCreator();
 
-wvc.config({
-  browserVersion: "141.0.7390.108",
-  browserUseGPU: false,
-  compatibleRenderingMode: true,
-});
+// 读取.env 配置
+import dotenv from "dotenv";
+dotenv.config();
+
+config = {
+  mp4Encoder: process.env.VIDEO_CODEC_OUT || VIDEO_ENCODER.CPU.H264,
+  browserUseGPU: process.env.BROWSER_USE_GPU === "true",
+  compatibleRenderingMode: process.env.COMPATIBLE_RENDERING_MODE === "true",
+};
+
+if (process.env.BROWSER_VERSION && process.env.BROWSER_VERSION.length > 0) {
+  config.browserVersion = process.env.BROWSER_VERSION;
+}
+
+wvc.config(config);
 
 // 创建单幕视频
 const video = wvc.createSingleVideo({

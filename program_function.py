@@ -300,7 +300,13 @@ def check_dir():
             "option/append.csv", "w", encoding="utf-8-sig", newline=""
         ) as file:
             pass
-
+    
+    # yaml 配置文件
+    if not os.path.exists("./config/calendar.yaml"):
+        # 复制默认日历配置文件
+        shutil.copyfile("./config/calendar.yaml.template","./config/calendar.yaml")
+    if not os.path.exists("./config/data.yaml"):
+        shutil.copyfile("./config/data.yaml.template","./config/data.yaml")
 
 def check_env():
     assert os.path.exists(

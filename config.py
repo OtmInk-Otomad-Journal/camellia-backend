@@ -1,3 +1,5 @@
+## 这一块大部分可以在 .env 中配置，除非必要无需修改 ##
+
 import time
 import os
 import threading
@@ -12,7 +14,7 @@ with open("./config/data.yaml", "r") as conf_file:
 
 usedTime = time.strftime("%Y%m%d", time.localtime())  # 不再采用存储文本的时间，改为即刻
 
-activity_list = {"wc": "每周挑战特殊推荐"}
+activity_list = os.environ.get("ACTIVITY_LIST",{})  # 特殊活动列表，用于 pick 过滤
 
 ### 拉取数据相关 ###
 api_header = {
@@ -29,7 +31,7 @@ base_path = "./AutoData/"  # 视频数据及评论
 delta_days = 11  # 以今天往前的第 delta_days 日开始统计
 range_days = 7  # 统计 range_days 天的数据
 
-selected_day = ""  # Debug 等用，指定结束日, YYMMDD 230721
+selected_day = os.environ.get("SELECTED_DAY","")  # Debug 等用，指定结束日, YYMMDD 230721
 if selected_day != "":
     select = datetime.datetime.strptime(selected_day, "%y%m%d")
     delta_days = (datetime.datetime.now() - select).days + range_days - 1
@@ -67,29 +69,18 @@ rank_types = ["ytpmv","common"] # 榜单类型
 cookie_file_path = "./cookies/cookie.txt"
 ####################
 
-main_max_title = 30
-side_max_title = 23
-pick_max_reason = 32
-pick_max_box = 640
 sep_time = conf["sep_time"]  # 间隔时间 # 20
 main_end = conf["main_end"]  # 主榜个数 # 15
 side_end = conf["side_end"]  # 副榜个数 # 40
-side_count = 4  # 副榜显示
-staticFormat = ["png", "jpg", "jpeg"]
 side_duration = side_end * 1.5
 
 max_main_duration = conf["max_main_duration"]  # 主榜第一最长时长 70
 
-screen_size = (1920, 1080)
-fps = 60
-
 screenRatio = 16 / 9
-
-main_to_side_offset = -1
 
 insert_count = conf["insert_count"]  # 主榜中断个数 # 5
 
-vcodec = "libx264"
+vcodec = os.environ.get("VIDEO_CODEC_OUT","libx264")  # 视频编码器
 
 render_format = {"vcodec": vcodec, "video_bitrate": "10000k", "audio_bitrate": "320k"}
 all_render_format = {
@@ -98,9 +89,15 @@ all_render_format = {
     "audio_bitrate": "320k",
     "r": "60",
 }
-read_format = {
-    # "vcodec": "h264_cuvid" # 若没有 CUDA 加速，请切换为其它编码器或直接注释本行。
-}
+
+def get_read_format():
+    temp_read_format = {}
+    if os.environ.get("VIDEO_CODEC_IN","") != "":
+        temp_read_format["vcodec"] = os.environ.get("VIDEO_CODEC_IN")
+    return temp_read_format
+
+read_format = get_read_format()
+
 audio_render_format = {"audio_bitrate": "320k"}
 # smooth_bit_rate = 5000000 # 5k码率保证渲染正常
 
@@ -111,16 +108,23 @@ smooth_render_format = {
     # "video_bitrate" : "4500k",
     "audio_bitrate": "320k",
 }
-muitl_limit = threading.Semaphore(1)
 
-render_max_threading_count = 1  # 正常渲染下最大线程数
-slip_second = 20 # 每分块的时长
+muitl_limit = threading.Semaphore(int(os.environ.get("MULTI_THREAD_RENDERING_COUNT",1)))  # 多线程渲染限制
 
-render_fast_threading_count = 10  # 快速渲染下线程数
+slip_second = int(os.environ.get("SLIP_SECOND",20))  # 每分块的时长，单位秒
 
-sequence_num_width = 6  # 序列渲染编号最大位数
+web_prefix = os.environ.get("WEB_PREFIX","http://localhost:7213/")  # 用于网页渲染的本地文件获取地址
+render_prefix = os.environ.get("RENDER_PREFIX","http://localhost:7214")  # 用于网页渲染的在线模板端
+panel_prefix = os.environ.get("PANEL_PREFIX",{"address": "0.0.0.0", "port": 7215})  # 用于面板管理的地址
 
+### 以下是废弃的配置项
 
-web_prefix = "http://localhost:7213/"  # 用于网页渲染的本地文件获取地址
-render_prefix = "http://localhost:7214"  # 用于网页渲染的在线模板端
-panel_prefix = {"address": "0.0.0.0", "port": 7215}  # 用于面板管理的地址
+# screen_size = (1920, 1080)
+# fps = 60
+
+# render_fast_threading_count = 10  # 快速渲染下线程数
+# render_max_threading_count = 1  # 正常渲染下最大线程数
+
+# sequence_num_width = 6  # 序列渲染编号最大位数
+
+# main_to_side_offset = -1

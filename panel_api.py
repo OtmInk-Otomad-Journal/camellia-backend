@@ -37,7 +37,6 @@ from config import panel_prefix
 
 check_dir()
 
-
 def reload_config():
     """
     重载配置

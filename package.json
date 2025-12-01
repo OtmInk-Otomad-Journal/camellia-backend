@@ -10,7 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dotenv": "^17.2.3",
     "prettier": "^3.3.3",
-    "web-video-creator": "^0.0.33"
+    "web-video-creator": "git+https://gitee.com/bad-gun/web-video-creator.git"
   }
 }
