@@ -11,7 +11,7 @@ const wvc = new WebVideoCreator();
 import dotenv from "dotenv";
 dotenv.config();
 
-config = {
+const config = {
   mp4Encoder: process.env.VIDEO_CODEC_OUT || VIDEO_ENCODER.CPU.H264,
   browserUseGPU: process.env.BROWSER_USE_GPU === "true",
   compatibleRenderingMode: process.env.COMPATIBLE_RENDERING_MODE === "true",
@@ -37,6 +37,7 @@ const video = wvc.createSingleVideo({
   audioBitrate: "320k",
   videoBitrate: "10000k",
   // browserFrameRateLimit: false,
+  beginFrameTimeout: 20000,
   // Cli 的进度条
   showProgress: true,
   pagePrepareFn: async (page) => {
