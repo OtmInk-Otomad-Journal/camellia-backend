@@ -6,6 +6,7 @@ import threading
 import datetime
 import yaml
 import pytz
+import json
 
 from dateutil.parser import isoparse
 
@@ -14,7 +15,7 @@ with open("./config/data.yaml", "r") as conf_file:
 
 usedTime = time.strftime("%Y%m%d", time.localtime())  # 不再采用存储文本的时间，改为即刻
 
-activity_list = os.environ.get("ACTIVITY_LIST",{})  # 特殊活动列表，用于 pick 过滤
+activity_list = json.loads(os.environ.get("ACTIVITY_LIST",{}))  # 特殊活动列表，用于 pick 过滤
 
 ### 拉取数据相关 ###
 api_header = {
@@ -115,7 +116,7 @@ slip_second = int(os.environ.get("SLIP_SECOND",20))  # 每分块的时长，单�
 
 web_prefix = os.environ.get("WEB_PREFIX","http://localhost:7213/")  # 用于网页渲染的本地文件获取地址
 render_prefix = os.environ.get("RENDER_PREFIX","http://localhost:7214")  # 用于网页渲染的在线模板端
-panel_prefix = os.environ.get("PANEL_PREFIX",{"address": "0.0.0.0", "port": 7215})  # 用于面板管理的地址
+panel_prefix = json.loads(os.environ.get("PANEL_PREFIX",{"address": "0.0.0.0", "port": 7215}))  # 用于面板管理的地址
 
 ### 以下是废弃的配置项
 
