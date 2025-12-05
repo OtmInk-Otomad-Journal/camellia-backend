@@ -57,11 +57,15 @@ async def get_data_by_search(
         for page in range(1, pages + 1):
             now = []
             for retry in range(2):
-                logging.info(f"第 {retry} 次抓取")
+                logging.info(f"第 {retry + 1} 次抓取")
                 # 抓取多次以防 B 站抽风返回错误数据
                 update_result = await fetch(keyword, page, begin, end)
                 if update_result:
-                    now += update_result.get("result", [])
+                    # 去重添加
+                    now_ids = set(item["bvid"] for item in now)
+                    for item in update_result["result"]:
+                        if item["bvid"] not in now_ids:
+                            now.append(item)
                 await asyncio.sleep(time_wait)
             if now == []:
                 break
@@ -77,6 +81,7 @@ async def get_data_by_search(
                 if begin_time <= pubdate < end_time:
                     filtered_now.append(video)
                 else:
+                    logging.info(f"过滤掉发布时间不在范围内的视频，发布时间 {pubdate}，范围 {begin_time} ~ {end_time}")
                     abandoned_count += 1
             logging.info(f"第 {page} 页原 {before_count} 条数据，过滤掉 {abandoned_count} 条数据，现 {before_count - abandoned_count} 条数据")
 

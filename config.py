@@ -10,6 +10,9 @@ import json
 
 from dateutil.parser import isoparse
 
+from dotenv import load_dotenv
+load_dotenv()
+
 with open("./config/data.yaml", "r") as conf_file:
     conf = yaml.safe_load(conf_file)
 
