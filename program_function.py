@@ -388,7 +388,10 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
     cut_result = []
 
     render_start_time = 0
-    for new_start_time in range(int(start_time), int(start_time + duration), slip_second):
+
+    # for(new_start_time = start_time; new_start_time < start_time + duration; new_start_time += slip_second)
+    new_start_time = start_time
+    while(new_start_time < start_time + duration):
         front_reserved = 0 # 预留前几秒，防止切割点出现黑屏等问题
         back_reserved = 0 # 预留后几秒，防止切割点出现黑屏等问题
 
@@ -451,6 +454,9 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
         )
 
         render_start_time += avaliable_duration
+
+        # 循环末尾增值
+        new_start_time += slip_second
 
     return cut_result
 
