@@ -55,14 +55,32 @@ async def get_data_by_search(
         await asyncio.sleep(time_wait)
 
         for page in range(1, pages + 1):
-            result = await fetch(keyword, page, begin, end)
-            if not result:
+            now = []
+            for retry in range(2):
+                logging.info(f"第 {retry} 次抓取")
+                # 抓取多次以防 B 站抽风返回错误数据
+                update_result = await fetch(keyword, page, begin, end)
+                if update_result:
+                    now += update_result.get("result", [])
+                await asyncio.sleep(time_wait)
+            if now == []:
                 break
-            try:
-                now = result["result"]
-            except Exception as e:
-                print(result)
+
+            # 过滤掉不在时间范围内的数据
+            begin_time = datetime.datetime.strptime(src_date_str, "%Y%m%d")
+            end_time = datetime.datetime.strptime(dst_date_str, "%Y%m%d") + datetime.timedelta(days=1)
+            filtered_now = []
+            before_count = len(now)
+            abandoned_count = 0
             for video in now:
+                pubdate = datetime.datetime.fromtimestamp(video["pubdate"])
+                if begin_time <= pubdate < end_time:
+                    filtered_now.append(video)
+                else:
+                    abandoned_count += 1
+            logging.info(f"第 {page} 页原 {before_count} 条数据，过滤掉 {abandoned_count} 条数据，现 {before_count - abandoned_count} 条数据")
+
+            for video in filtered_now:
                 video["title"] = (
                     video["title"]
                     .replace('<em class="keyword">', "")
@@ -73,7 +91,7 @@ async def get_data_by_search(
                 video["pubdate"] = time.strftime(
                     "%Y-%m-%d %H:%M:%S", time.localtime(video["pubdate"])
                 )
-            data += now
+            data += filtered_now
             logging.info(f"第 {page} 页完成")
             await asyncio.sleep(time_wait)
 
