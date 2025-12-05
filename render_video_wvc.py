@@ -33,8 +33,11 @@ def render_video(data, url, audio=None, fast=False):
 
         for vid_chunk in video_chunks:
             render_times = 0
-            while(render_times < 5):
-                output_src = final_output_src.replace(".mp4", f"_part_{int(vid_chunk.render_start_time)}.mp4")
+            output_src = final_output_src.replace(".mp4", f"_part_{int(vid_chunk.render_start_time)}.mp4")
+            while(not os.path.exists(output_src) and render_times < 5):
+                render_times += 1
+                if render_times > 1:
+                    logging.error(f"视频片段渲染失败，正在重试... (第 {render_times} 次)")
                 logging.info(f"裁剪视频片段: {vid_chunk.filepath} (渲染起始时间: {vid_chunk.render_start_time}, 时长: {vid_chunk.duration}), 输出至: {output_src}")
                 data.update({
                             "url": url,
@@ -68,9 +71,6 @@ def render_video(data, url, audio=None, fast=False):
                     if len(info) != 0:
                         logging.info(info.replace("\n", ""))
 
-                if(not os.path.exists(output_src)):
-                    logging.error(f"视频片段渲染失败，正在重试... (第 {render_times + 1} 次)")
-                    render_times += 1
             if render_times >= 5:
                 raise Exception(f"视频片段渲染失败，已重试 5 次，终止渲染。请检查日志。")
 
