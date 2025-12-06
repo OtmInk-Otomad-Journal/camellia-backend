@@ -211,5 +211,6 @@ def AllVideo(main_end, pickArr):
     # os.remove("./time.txt")
     if os.path.exists("./data/picked.csv"):
         os.remove("./data/picked.csv")
+    else:
         logging.warning("没有检测到 picked.csv 文件，请确认是否遗漏了 Pick Up 环节！")
     logging.info(f"文件清理完毕！")
