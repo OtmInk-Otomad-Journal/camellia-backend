@@ -222,7 +222,7 @@ def get_info_by_time(
         tags = video["tag"].lower().split(",")
         if (not tags) or (tags == [""]):
             # 未能正常获取到标签，手动获取
-            tags = get_tags(video["aid"], sleep_inteval=sleep_inteval)
+            tags = get_tags(video["id"], sleep_inteval=sleep_inteval)
         video["tag"] = tags
     num_results: int = data["numResults"]
     num_pages: int = data["numPages"]
