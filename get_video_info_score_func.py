@@ -219,7 +219,11 @@ def get_info_by_time(
         video.pop("badgepay", None)
         video["get_time"] = int(datetime.datetime.now().timestamp())
         video["tid"] = video_zone
-        video["tag"] = video["tag"].lower().split(",")
+        tags = video["tag"].lower().split(",")
+        if (not tags) or (tags == [""]):
+            # 未能正常获取到标签，手动获取
+            tags = get_tags(video["aid"], sleep_inteval=sleep_inteval)
+        video["tag"] = tags
     num_results: int = data["numResults"]
     num_pages: int = data["numPages"]
     return video_list, num_pages
