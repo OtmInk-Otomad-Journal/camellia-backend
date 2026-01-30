@@ -222,7 +222,7 @@ def get_info_by_time(
         tags = video["tag"].lower().split(",")
         if (not tags) or (tags == [""]):
             # 未能正常获取到标签，手动获取
-            tags = get_tags(video["id"], sleep_inteval=sleep_inteval)
+            tags = get_tags(video["id"])
         video["tag"] = tags
     num_results: int = data["numResults"]
     num_pages: int = data["numPages"]
@@ -726,7 +726,7 @@ def apply_response_getter(
             logging.warning(
                 f"未成功获取 {url} 数据: return_code={return_code}, message={result['message']}, 第 {try_times} 次尝试"
             )
-            if return_code in [-504, -500]:
+            if return_code in [-504, -500, -700, -10]:
                 try_times += 1
                 time.sleep(sleep_inteval * (try_times + 1))
                 continue
