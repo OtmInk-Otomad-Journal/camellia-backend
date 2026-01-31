@@ -121,7 +121,7 @@ def get_tags(aid: int, sleep_inteval=0.3):
     time.sleep(sleep_inteval)
     tags = []
     for tag in data:
-        tags.append(tag["tag_name"])
+        tags.append(tag["tag_name"].lower())
     return tags
 
 
@@ -749,3 +749,6 @@ def switch_proxy():
     except:
         proxy_url = ""
     settings.proxy = proxy_url
+
+def lower_tags(tags: List[str]) -> List[str]:
+    return [tag.lower() for tag in tags]

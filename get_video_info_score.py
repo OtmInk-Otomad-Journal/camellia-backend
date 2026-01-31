@@ -40,6 +40,7 @@ from get_video_info_score_func import (
     calc_median,
     get_info_by_time,
     get_credential_from_path,
+    lower_tags,
     retrieve_video_comment,
     calc_aid_score,
     retrieve_video_stat,
@@ -421,7 +422,7 @@ all_rank_datas = {
 }
 
 for video_aid, video_info in all_video_info.items():
-    if("ytpmv" in video_info["tag"]):
+    if("ytpmv" in lower_tags(video_info["tag"])):
         all_rank_datas["ytpmv"].append(video_aid)
     else:
         all_rank_datas["common"].append(video_aid)
