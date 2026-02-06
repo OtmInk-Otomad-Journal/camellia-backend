@@ -1,4 +1,5 @@
 from typing import List, Tuple, Dict, Any, Optional
+from dataclasses import dataclass, field
 import marshal
 import datetime
 

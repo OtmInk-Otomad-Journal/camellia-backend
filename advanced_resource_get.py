@@ -28,51 +28,73 @@ def advanced_resource_get():
     except Exception as e:
         logging.exception(traceback.format_exc())
 
+def pull_resource(ranked_list, rank_type):
+    from config import main_end, side_end, usedTime
 
-def mainfunc():
-    from config import main_end, side_end, usedTime, sep_time, web_prefix, activity_list, rank_types
+    mainArr = extract_single_column(ranked_list, "aid", main_end)
+    # 获取包括副榜在内的数据
+    pullArr = extract_single_column(ranked_list, "aid", main_end + side_end)
 
-    # 获取数据
-    for rank_type in rank_types:
-        ranked_list = convert_csv(f"./data/{rank_type}_data.csv")
-        mainArr = extract_single_column(ranked_list, "aid", main_end)
-        # 获取包括副榜在内的数据
-        pullArr = extract_single_column(ranked_list, "aid", main_end + side_end)
-
-        # 导航导出
-        ranks = 0
-        for ranked in ranked_list:
-            ranks += 1
-            if ranks > main_end + side_end:
-                break
-            with open(
-                f"./fast_view/bili_{usedTime}.txt", "a", encoding="utf-8-sig"
-            ) as fast:
-                if ranks == 1:
-                    fast.write(f"{rank_type} 主榜\n")
-                fast.write(f"{ranked['ranking']}\t{ranked['bvid']}\n")
-            with open(
-                f"./fast_view/wiki_{usedTime}.txt", "a", encoding="utf-8-sig"
-            ) as fast:
-                fast.write(
-                    "{{"
-                    + f"""OtmRanking/brick
+    # 导航导出
+    ranks = 0
+    for ranked in ranked_list:
+        ranks += 1
+        if ranks > main_end + side_end:
+            break
+        with open(
+            f"./fast_view/bili_{usedTime}.txt", "a", encoding="utf-8-sig"
+        ) as fast:
+            if ranks == 1:
+                fast.write(f"{rank_type} 主榜\n")
+            fast.write(f"{ranked['ranking']}\t{ranked['bvid']}\n")
+        with open(
+            f"./fast_view/wiki_{usedTime}.txt", "a", encoding="utf-8-sig"
+        ) as fast:
+            fast.write(
+                "{{"
+                + f"""OtmRanking/brick
 |ranking={ranked["ranking"]}
 |title={ranked["title"]}
 |score={ranked["score"]}
 |aid={ranked["aid"]}"""
-                    + "\n}}\n"
-                )
+                + "\n}}\n"
+            )
 
-        # 视频资源获取，包括前 55 个
-        downloaded = 0
-        skipConvert = False
-        for item in pullArr:
-            downloaded += 1
-            if downloaded > main_end:
-                skipConvert = True
-            get_video(item, skipConvert=skipConvert)
+    # 视频资源获取，包括前 55 个
+    downloaded = 0
+    skipConvert = False
+    for item in pullArr:
+        downloaded += 1
+        if downloaded > main_end:
+            skipConvert = True
+        get_video(item, skipConvert=skipConvert)
 
+def divide_list(original_list, type):
+    from config import main_end
+    # 按类型分割 csv
+    type_list = []
+    for item in original_list:
+        if item["type"] == type:
+            type_list.append(item)
+    # 排序，添加 ranking 字段
+    type_list = sorted(
+        type_list, key=lambda x: float(x["score"]), reverse=True
+    )  # 排序
+    ranking = 0
+    for item in type_list:
+        ranking += 1
+        item["ranking"] = ranking
+    mainArr = extract_single_column(type_list, "aid", main_end)
+    # 存入文件夹
+    with open(f"./data/{type}_data.csv", "w", encoding="utf-8-sig", newline="") as csvWrites:
+        fieldnames = type_list[0].keys()
+        writer = csv.DictWriter(csvWrites, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(type_list)
+    return type_list, mainArr
+
+def pull_pickup_resource(mainArr):
+    from config import sep_time, web_prefix, activity_list, usedTime
     # Pick Up 的资源获取
     allArr = []
     pickHeader = [
@@ -178,6 +200,21 @@ def mainfunc():
 |aid={pickOne['aid']}"""
                 + "\n}}\n"
             )
+
+def mainfunc():
+    from config import rank_types
+
+    # 获取数据
+    original_list = convert_csv(f"./data/data.csv")
+    # 按 rank_type 分割 csv，并获取资源，提取出主榜的 aid 列表以供 Pick Up 资源获取时使用
+    mainArr = []
+    for rank_type in rank_types:
+        divided_list, single_arr = divide_list(original_list, rank_type)
+        mainArr.extend(single_arr)
+        pull_resource(divided_list, rank_type)
+
+    pull_pickup_resource(mainArr)
+
     logging.info("--------------------")
     logging.info("资源获取进程已全部完成！")
 

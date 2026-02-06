@@ -9,6 +9,7 @@ import random
 import shutil
 from collections import defaultdict
 from typing import List, Tuple, Dict, Set
+from dataclasses import dataclass, field
 
 from config import (
     base_path,
@@ -154,6 +155,8 @@ for kw in target_bad_keyword:
 
 ####################### 按分区拉取数据 #########################
 all_video_info: Dict[int, Dict] = {}
+# 更具体化：
+# all_video_info: Dict[int, ] = {}
 if not isinstance(video_zones, list):
     video_zones = []
 for video_zone in video_zones:
@@ -414,34 +417,7 @@ for index in range(recursive_times):
         mid_info.s1_bias = mid_score
 logging.info("计分完成")
 
-###################################
-### 将总榜拆分成多个榜单
-all_rank_datas = {
-    "ytpmv": [],
-    "common": []
-}
-
-for video_aid, video_info in all_video_info.items():
-    if("ytpmv" in lower_tags(video_info["tag"])):
-        all_rank_datas["ytpmv"].append(video_aid)
-    else:
-        all_rank_datas["common"].append(video_aid)
-###################################
-
 aid_and_score: List[Tuple[int, float]] = [(k, v) for k, v in aid_to_score_norm.items()]
-
-all_aid_and_scores = {
-    "ytpmv": [],
-    "common": []
-}
-
-for rank_type, aids in all_rank_datas.items():
-    for k, v in aid_to_score_norm.items():
-        if k in aids:
-            all_aid_and_scores[rank_type].append((k,v))
-
-for rank_type, single_aid_and_score in all_aid_and_scores.items():
-    all_aid_and_scores[rank_type].sort(key=lambda x: -x[1])
 
 aid_and_score.sort(key=lambda x: -x[1])
 if __name__ == "__main__":
@@ -458,10 +434,8 @@ if __name__ == "__main__":
 
 pull_size = pull_full_list_stat if pull_full_list_stat > 0 else len(aid_and_score)
 
-logging.info(f"将获取各排行前 {pull_size} 条视频的信息")
-selected_aid = []
-for rank_type, single_aid_and_score in all_aid_and_scores.items():
-    selected_aid += [aid for aid, _ in single_aid_and_score[:pull_size]]
+logging.info(f"将获取排行前 {pull_size} 条视频的信息")
+selected_aid = [aid for aid, _ in aid_and_score[:pull_size]]
 _, _, selected_video_stat = retrieve_video_stat(
     data_path, selected_aid, sleep_inteval=sleep_inteval, cookie_raw=cookie_raw
 )
