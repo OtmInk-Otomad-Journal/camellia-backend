@@ -13,6 +13,20 @@ rank_types = ["ytpmv", "common"]
 
 overall_time = 0
 
+
+def load_rank_column(csv_path):
+    with open(csv_path, "r", encoding="utf-8-sig") as csvfile:
+        reader = csv.reader(csvfile)
+        header = next(reader, [])
+        ranking_idx = header.index("ranking") if "ranking" in header else None
+        ranks = [""]
+        for row_index, row in enumerate(reader, start=1):
+            if ranking_idx is not None and ranking_idx < len(row) and row[ranking_idx]:
+                ranks.append(row[ranking_idx])
+            else:
+                ranks.append(str(row_index))
+    return ranks
+
 def duration(file, offset):
     return float(ffmpeg.probe(file)["streams"][0]["duration"]) + offset
 
@@ -89,13 +103,8 @@ def AllVideo(main_end, pickArr):
         filePath = filePath + "_" + str(times)
         os.mkdir(filePath)
 
-    with open("./data/ytpmv_data.csv", "r", encoding="utf-8-sig") as csvfile:
-        reader = csv.reader(csvfile)
-        ytpmv_rank_column = [row[0] for row in reader]
-
-    with open("./data/common_data.csv", "r", encoding="utf-8-sig") as csvfile:
-        reader = csv.reader(csvfile)
-        main_rank_column = [row[0] for row in reader]
+    ytpmv_rank_column = load_rank_column("./data/ytpmv_data.csv")
+    main_rank_column = load_rank_column("./data/common_data.csv")
     AllArr = []
     trueFiles = []
     for curDir, dirs, files in os.walk("./option/ads"):
