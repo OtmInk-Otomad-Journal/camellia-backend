@@ -5,6 +5,10 @@ import threading
 from all_create import AllVideo
 from program_function import convert_csv , extract_single_column , check_env
 from render_video_wvc import render_video
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # 声明变量
 from config import *
 
@@ -20,8 +24,9 @@ logger.addHandler(console_handler)
 check_env()
 
 # 获取数据
+logging.info("正在读取数据……")
 ranked_list = convert_csv("data/viewpicked.csv")
-
+logging.info(f"数据读取完成，共计 {len(ranked_list)} 条数据。")
 # 段落合成
 render_times = 0
 rend_q = []
@@ -29,11 +34,9 @@ for viding in ranked_list:
     render_times += 1
     if os.path.exists(f"./output/clip/ViewRank_{render_times}.mp4"):
         continue
-
     # 正常渲染。
     url = f"{render_prefix}/viewpick"
     viding.update({ "output_src": f"./output/clip/ViewRank_{render_times}.mp4" , "url": url })
-    muitl_limit.acquire()
     rend_s = threading.Thread(target=render_video,args=(viding,url))
     rend_s.start()
     rend_q.append(rend_s)

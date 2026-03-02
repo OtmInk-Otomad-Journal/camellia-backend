@@ -196,41 +196,23 @@ async def upload_pickup(file: UploadFile = File(...)):
 
 
 @router.get("/backend/pull-pickup-data")
-async def pull_data():
+async def pull_data(startTime: str, endTime: str):
     """
-    获取已经存在的 pick.csv 文件，根据时间范围限制返回量，以 JSON 返回
+    /backend/pull-pickup-data?startTime=xxx&endTime=xxx?biliOnly=true
+    获取在线 Pick Up 数据，并返回 JSON
+    需要传入 x-api-key
     """
     try:
-        from config import activity_list
-
-        min_time = datetime.datetime.today() + datetime.timedelta(days=-8)
-        pickList = []
-        with open("./data/pick.csv", "r", encoding="utf-8-sig", newline="") as csvfile:
-            listed = csv.DictReader(csvfile)
-            for item in listed:
-                time = item["提交时间（自动）"]
-                realtime = datetime.datetime.strptime(time, "%Y/%m/%d %H:%M:%S")
-                if realtime < min_time:
-                    continue
-                aid = turnAid(str(item["推荐作品 av 号 / BV 号（必填）"]))
-                text = item["推荐理由（必填）"]
-                picker = item["推荐人"]
-                if picker == "":
-                    picker = "神秘人"
-                if item["您的备注"] in activity_list:  # 活动特别识别
-                    act = item["您的备注"]
-                else:
-                    act = ""
-                pickList.append(
-                    {
-                        "status": True,
-                        "aid": aid,
-                        "reason": text,
-                        "picker": picker,
-                        "activity": act,
-                    }
-                )
-        return {"code": 0, "msg": None, "data": pickList}
+        url = os.getenv("ONLINE_PICK_DATA_URL", "")
+        key = os.getenv("ONLINE_AUTH_KEY", "")
+        response = requests.get(url=url, params={"startTime": startTime, "endTime": endTime, "biliOnly": 'true'}, headers={"x-api-key": key}).json()
+        if response["success"] != True:
+            return {"code": -1, "msg": "获取失败: " + response.get("message", "未知错误"), "data": {}}
+        # work 可能是 aid，也可能是 bvid，需要统一为 aid
+        for item in response["data"]:
+            if item.get("work") != None:
+                item["work"] = turnAid(item["work"])
+        return {"code": 0, "msg": None, "data": response["data"]}
     except:
         return {"code": -1, "msg": "未知错误", "data": {}}
 

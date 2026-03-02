@@ -1,5 +1,6 @@
 import csv
 import logging
+import threading
 from program_function import (
     get_img,
     convert_csv,
@@ -21,6 +22,8 @@ from config import *
 allArr = []
 pickHeader = [
     "score",
+    "golden",
+    "normal",
     "aid",
     "bvid",
     "title",
@@ -43,8 +46,23 @@ with open(f"./data/viewpicked.csv", "w", encoding="utf-8-sig", newline="") as cs
     writer = csv.DictWriter(csvWrites, pickHeader)
     writer.writeheader()
 
-    def getInfo(aid, score):
-        pickAllInfo = retrieve_single_video_stat(video_aid=int(aid))
+    def getInfo(aid, score, golden, normal):
+        try:
+            pickAllInfo = retrieve_single_video_stat(video_aid=int(aid))
+        except:
+            logging.error(f"获取观众选视频 {aid} 信息失败，跳过")
+            pickAllInfo = [None, {
+                "aid": aid,
+                "bvid": "",
+                "cid": 0,
+                "title": "信息获取失败",
+                "owner": {"name": ""},
+                "copyright": "",
+                "pubdate": time.time(),
+                "start_time": 0,
+                "full_time": 0,
+                "duration": 0,
+            }]
         picked = pickAllInfo[1]
         try:
             vid_src = get_video(picked["aid"])
@@ -58,10 +76,18 @@ with open(f"./data/viewpicked.csv", "w", encoding="utf-8-sig", newline="") as cs
         start_time, full_time = danmuku_time(
             picked["aid"], exact_time, sep_time, cid=picked["cid"]
         )
-        pic_src = get_img(picked["aid"])
-        color_rgb = calc_color(pic_src["cover"])
+        try:
+            pic_src = get_img(picked["aid"])
+        except:
+            pic_src = {"cover": "", "avatar": ""}
+        try:
+            color_rgb = calc_color(pic_src["cover"])
+        except:
+            color_rgb = [(255, 255, 255), (0, 0, 0)]
         oneArr = {
             "score": score,
+            "golden": golden,
+            "normal": normal,
             "aid": picked["aid"],
             "bvid": picked["bvid"],
             "title": picked["title"],
@@ -85,9 +111,11 @@ with open(f"./data/viewpicked.csv", "w", encoding="utf-8-sig", newline="") as cs
         writer.writerow(oneArr)
         logging.info("一个 观众选 作品已记录")
 
-    def special_info(aid, score, title):
+    def special_info(aid, score, golden, normal, title):
         oneArr = {
             "score": score,
+            "golden": golden,
+            "normal": normal,
             "aid": aid,
             "bvid": aid,
             "title": title,
@@ -110,14 +138,48 @@ with open(f"./data/viewpicked.csv", "w", encoding="utf-8-sig", newline="") as cs
 
     pickInfo = convert_csv("./data/viewpick.csv")
     picks = 0
+
+    # 首先先尝试下载所有视频，同时可下载 5 个
+    max_workers = 5  # 同时下载的视频数量
+    video_tasks = []  # 存储需要下载视频的任务
+    
+    # 收集所有需要下载视频的aid
+    for pick in pickInfo:
+        if pick["special"] != "t":  # 只处理非特殊视频
+            aid = str(pick["aid"])
+            if aid[0:2] == "av":
+                aid = aid[2:]
+            video_tasks.append(aid)
+    
+    # 使用线程池下载视频
+    def download_video(aid):
+        try:
+            get_video(int(aid))
+        except Exception as e:
+            logging.error(f"下载视频 {aid} 时出错: {e}")
+    
+    semaphore = threading.Semaphore(max_workers)
+    threads = []
+    for aid in video_tasks:
+        semaphore.acquire()
+        thread = threading.Thread(target=lambda a: (download_video(a), semaphore.release()), args=(aid,))
+        thread.start()
+        threads.append(thread)
+
+    for thread in threads:
+        thread.join()
+
+
     for pick in pickInfo:
         time.sleep(0.5)
         picks += 1
+        aid = str(pick["aid"])
+        if aid[0:2] == "av":
+            aid = aid[2:]
         if pick["special"] == "t":
-            special_info(pick["aid"], pick["score"], pick["title"])
+            special_info(aid, pick["score"],pick["golden"],pick["normal"], pick["title"])
         else:
-            getInfo(pick["aid"], pick["score"])
-
+            getInfo(aid, pick["score"], pick["golden"], pick["normal"])
         logging.info(f"进度 {picks} / {len(pickInfo)}")
 
 # PICK UP 快速导航

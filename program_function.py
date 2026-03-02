@@ -370,7 +370,7 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
     """
     裁剪视频并规格化尺寸。
     """
-    from config import screenRatio, vcodec, slip_second
+    from config import screenRatio, vcodec, slip_second, all_render_format
 
     videoSourceSize = ffmpeg.probe(f"./video/{aid}.mp4")["streams"][0]
     videoRatio = videoSourceSize["width"] / videoSourceSize["height"]
@@ -421,6 +421,8 @@ def video_cut(aid, start_time=0, duration=10) -> list[VideoChunk]:
             "-c:v", vcodec,
             "-c:a", "aac",
             "-ar", "44100",
+            "-b:v", all_render_format["video_bitrate"],
+            "-b:a", all_render_format["audio_bitrate"],
             video_dst,
         ]
 
