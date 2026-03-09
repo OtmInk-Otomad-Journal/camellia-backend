@@ -31,6 +31,15 @@ def _normalize_video(video: Dict[str, Any]) -> Dict[str, Any]:
 		item["tag"] = _to_tag_list(item.get("tag"))
 	else:
 		item["tag"] = []
+	
+	# review 字段可能为 null
+	if "review" in item and item["review"] is None:
+		item["review"] = 0
+
+	# aid 设为 id
+	if "aid" in item and "id" not in item:
+		item["id"] = item["aid"]
+
 	return item
 
 
@@ -87,7 +96,7 @@ async def _fetch_all_video_info() -> Dict[int, Dict[str, Any]]:
 			)
 
 			if not payload.get("success", False):
-				raise RuntimeError(f"在线抓取接口返回失败: page={page}, payload={payload}")
+				raise RuntimeError(f"抓取已有数据库接口返回失败: page={page}, payload={payload}")
 
 			data = payload.get("data", [])
 			pagination = payload.get("pagination", {})
@@ -95,13 +104,13 @@ async def _fetch_all_video_info() -> Dict[int, Dict[str, Any]]:
 
 			for video in data:
 				normalized = _normalize_video(video)
-				video_id = normalized.get("id")
+				video_id = normalized.get("aid")
 				if video_id is None:
 					continue
 				all_items[int(video_id)] = normalized
 
 			logging.info(
-				f"在线抓取完成第 {page}/{total_pages} 页，累计视频数 {len(all_items)}"
+				f"抓取已有数据库完成第 {page}/{total_pages} 页，累计视频数 {len(all_items)}"
 			)
 			page += 1
 
