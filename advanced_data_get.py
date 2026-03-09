@@ -20,6 +20,17 @@ def mainfunc():
     """
     获取周刊数据，将生成一个 data.csv 文件
     """
+    from program_function import (
+        check_dir,
+        get_img,
+        calc_color,
+        html_unescape,
+        get_danmaku,
+    )
+
+    # 新建不存在的文件夹
+    check_dir()
+
     from config import main_end, side_end, sep_time, web_prefix, pull_full_list_stat
 
     formatter = logging.Formatter("[%(levelname)s]\t%(message)s")
@@ -37,18 +48,8 @@ def mainfunc():
         selected_video_stat,
         all_video_info
     )
-    from program_function import (
-        check_dir,
-        get_img,
-        calc_color,
-        exactVideoLength,
-        html_unescape,
-        get_danmaku,
-    )
-    from danmuku_time import danmuku_time
 
-    # 新建不存在的文件夹
-    check_dir()
+    from danmuku_time import danmuku_time
 
     # 预先黑名单
     blackArr = []
