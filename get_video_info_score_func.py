@@ -530,6 +530,10 @@ def calc_aid_score(
     ) """  # 不抑制重复评论的算法
 
     aid_favorite = video_info["favorites"]
+    if aid_favorite is not None:
+        aid_favorite = int(aid_favorite)
+    else:
+        aid_favorite = 0
     # aid_score /= math.log2(len(comment_list)+2)
     aid_score_norm = math.sqrt(aid_score * math.log10(aid_favorite / 10 + 1))
     # 调高了->热门视频的排名更高，调低了->低播放量而圈子向的视频排名更高
