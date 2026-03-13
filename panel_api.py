@@ -211,7 +211,11 @@ async def pull_data(startTime: str, endTime: str):
         # work 可能是 aid，也可能是 bvid，需要统一为 aid
         for item in response["data"]:
             if item.get("work") != None:
-                item["work"] = turnAid(item["work"])
+                try:
+                    item["work"] = turnAid(item["work"])
+                except:
+                    # 无法转换为 aid，可能是无效的 bvid，直接跳过该项
+                    pass
         return {"code": 0, "msg": None, "data": response["data"]}
     except:
         return {"code": -1, "msg": "未知错误", "data": {}}
