@@ -36,6 +36,10 @@ def _normalize_video(video: Dict[str, Any]) -> Dict[str, Any]:
 	if "review" in item and item["review"] is None:
 		item["review"] = 0
 
+	# favorites 字段可能为 null
+	if "favorites" in item and item["favorites"] is None:
+		item["favorites"] = 0
+
 	# aid 设为 id
 	if "aid" in item and "id" not in item:
 		item["id"] = item["aid"]
