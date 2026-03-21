@@ -23,6 +23,10 @@ from dataclasses import dataclass
 
 
 def get_img(aid):
+    if os.path.exists(f"./avatar/{aid}.png") and os.path.exists(f"./cover/{aid}.png"):
+        logging.info(f"av{aid} 相关图片已经存在")
+        return {"avatar": f"./avatar/{aid}.png", "cover": f"./cover/{aid}.png"}
+
     from config import api_header
 
     video_data = requests.get(
@@ -37,7 +41,7 @@ def get_img(aid):
         img = Image.open(BytesIO(img_content))
         img.save(f"./avatar/{aid}.png")
     # 封面
-    if not os.path.exists(f"cover/{aid}.png"):
+    if not os.path.exists(f"./cover/{aid}.png"):
         img_content = requests.get(url=cover, headers=api_header).content
         img = Image.open(BytesIO(img_content))
         img.save(f"./cover/{aid}.png")

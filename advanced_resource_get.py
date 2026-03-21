@@ -68,6 +68,7 @@ def pull_resource(ranked_list, rank_type):
         if downloaded > main_end:
             skipConvert = True
         get_video(item, skipConvert=skipConvert)
+        get_img(item["aid"])
 
 def divide_list(original_list, type):
     from config import main_end
