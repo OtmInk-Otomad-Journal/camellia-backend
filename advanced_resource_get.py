@@ -71,7 +71,7 @@ def pull_resource(ranked_list, rank_type):
         get_img(item)
 
 def divide_list(original_list, type):
-    from config import main_end
+    from config import main_end, side_end
     # 按类型分割 csv
     type_list = []
     for item in original_list:
@@ -80,11 +80,18 @@ def divide_list(original_list, type):
     # 排序，添加 ranking 字段
     type_list = sorted(
         type_list, key=lambda x: float(x["score"]), reverse=True
-    )  # 排序
+    )  # 排序并重新补充 cover_src、avatar_src、light_color、dark_color 等字段（仅）
     ranking = 0
     for item in type_list:
         ranking += 1
         item["ranking"] = ranking
+        if ranking <= main_end + side_end:
+            item["cover_src"] = get_img(item["aid"])["cover"]
+            item["avatar_src"] = get_img(item["aid"])["avatar"]
+            color_rgb = calc_color(item["cover_src"])
+            item["light_color"] = str(color_rgb[0])
+            item["dark_color"] = str(color_rgb[1])
+
     mainArr = extract_single_column(type_list, "aid", main_end)
     # 存入文件夹
     with open(f"./data/{type}_data.csv", "w", encoding="utf-8-sig", newline="") as csvWrites:
