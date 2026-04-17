@@ -150,6 +150,7 @@ def mainfunc():
         )  # 排序
         ranking = 0 # 不再加入 csv 中，仅在程序中使用
         ranked_list = []
+        type_count = {}
         for vid in vid_list:
             vid = html_unescape(vid)
             ranking += 1
@@ -177,7 +178,11 @@ def mainfunc():
                     danmaku_src = get_danmaku(vid["cid"], aid=vid["aid"])  # 弹幕获取
                     exact_time = float(vid["duration"])  # exactVideoLength(vid_src)
                     full = False
-                    if ranking == 1:
+                    # 如果是每个种类中的第一个，就设为 True
+                    if vid["type"] not in type_count:
+                        type_count[vid["type"]] = 0
+                    type_count[vid["type"]] += 1
+                    if type_count[vid["type"]] == 1:
                         full = True
                     start_time, full_time = danmuku_time(
                         vid["aid"], exact_time, sep_time, full=full, cid=vid["cid"]
