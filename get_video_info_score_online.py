@@ -44,13 +44,13 @@ def _normalize_video(video: Dict[str, Any]) -> Dict[str, Any]:
 	if "aid" in item and "id" not in item:
 		item["id"] = item["aid"]
 
-	# pubtime 从 2026-03-09T21:13:25.000Z 转为 YYYY-MM-DD HH:MM:SS 格式
-	if "pubtime" in item and isinstance(item["pubtime"], str):
+	# created_at 从 2026-03-09T21:13:25.000Z 转为 YYYY-MM-DD HH:MM:SS 格式
+	if "created_at" in item and isinstance(item["created_at"], str):
 		try:
-			pubtime_dt = datetime.datetime.fromisoformat(item["pubtime"].rstrip("Z"))
-			item["pubtime"] = pubtime_dt.strftime("%Y-%m-%d %H:%M:%S")
+			created_at_dt = datetime.datetime.fromisoformat(item["created_at"].rstrip("Z"))
+			item["created_at"] = created_at_dt.strftime("%Y-%m-%d %H:%M:%S")
 		except ValueError:
-			logging.warning(f"无法解析 pubtime 字段: {item['pubtime']}")
+			logging.warning(f"无法解析 created_at 字段: {item['created_at']}")
 
 	return item
 
