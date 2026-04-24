@@ -86,7 +86,7 @@ async def _fetch_all_video_info() -> Dict[int, Dict[str, Any]]:
 
 	now_date = datetime.datetime.now()
 	src_date = now_date + datetime.timedelta(days=-delta_days)
-	dst_date = src_date + datetime.timedelta(days=+range_days - 1)
+	dst_date = src_date + datetime.timedelta(days=+range_days)
 	from_time = src_date.strftime("%Y%m%d")
 	to_time = dst_date.strftime("%Y%m%d")
 
