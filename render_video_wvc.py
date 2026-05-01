@@ -3,11 +3,29 @@ import subprocess
 import hashlib
 import json
 import logging
+import re
+from datetime import datetime, timezone, timedelta
 from program_function import VideoChunk, audio_process, video_cut, video_merge
 from config import muitl_limit
 
+
+def _normalize_pubtime(pubtime):
+    if not isinstance(pubtime, str):
+        return pubtime
+
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", pubtime):
+        return pubtime
+
+    utc_time = datetime.fromisoformat(pubtime.replace("Z", "+00:00"))
+    beijing_time = utc_time.astimezone(timezone(timedelta(hours=8)))
+    return beijing_time.strftime("%Y/%m/%d %H:%M:%S")
+
 def render_video(data, url, audio=None, fast=False):
     with muitl_limit:
+        pubtime = data.get("pubtime")
+        if pubtime:
+            data["pubtime"] = _normalize_pubtime(pubtime)
+
         start_time = data["start_time"]
         full_duration = data["full_time"]
         if not fast:
