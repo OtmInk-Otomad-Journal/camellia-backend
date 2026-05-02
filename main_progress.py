@@ -14,6 +14,19 @@ from render_video_wvc import render_video
 
 import traceback
 
+import re
+from datetime import datetime, timezone, timedelta
+def _normalize_pubtime(pubtime):
+    if not isinstance(pubtime, str):
+        return pubtime
+
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z", pubtime):
+        return pubtime
+
+    utc_time = datetime.fromisoformat(pubtime.replace("Z", "+00:00"))
+    beijing_time = utc_time.astimezone(timezone(timedelta(hours=8)))
+    return beijing_time.strftime("%Y/%m/%d %H:%M:%S")
+
 def main_progress():
     try:
         mainfunc()
@@ -60,6 +73,11 @@ def mainfunc():
         rank_type_num += 1
         rank_type_last = True if rank_type_num == len(rank_types) else False
         ranked_list = convert_csv(f"./data/{rank_type}_data.csv")
+
+        for data in ranked_list:
+            pubtime = data.get("pubtime")
+            if pubtime:
+                data["pubtime"] = _normalize_pubtime(pubtime)
 
         # 主榜列表单独提取
         mainArr = extract_single_column(ranked_list, "aid", main_end)
