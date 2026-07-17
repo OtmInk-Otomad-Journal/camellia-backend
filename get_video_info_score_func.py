@@ -6,6 +6,7 @@ import marshal
 import datetime
 import logging
 import math
+import asyncio
 import requests
 from typing import List, Tuple, Dict, Optional, Set, Callable, Optional, Any
 from functools import partial
@@ -622,11 +623,31 @@ def retrieve_single_video_stat(
 
     try:
         stat_json = temp_dict.json()
-        stat = stat_json["data"]
-    except:
-        stat = None
+    except Exception:
+        logging.warning(f"获取 av{video_aid} 响应 JSON 解析失败")
+        return -2, {}
 
-    assert isinstance(stat, dict), f"获取 av{video_aid} 失败，{status = }, {stat = }"
+    # 检查 API 级返回码（B 站 HTTP 200 但 data 为 null 的情况）
+    api_code = stat_json.get("code", 0)
+    if api_code != 0:
+        if api_code in {62002, 62004, -404}:
+            # 62002: 稿件不可见, 62004: 稿件已删除, -404: 不存在
+            logging.warning(
+                f"av{video_aid} 稿件不可见 (API code={api_code}, "
+                f"msg={stat_json.get('message', '')}), 标记为无效"
+            )
+            return -1, {}
+        else:
+            logging.warning(
+                f"获取 av{video_aid} API 返回错误: "
+                f"code={api_code}, msg={stat_json.get('message', '')}"
+            )
+            return -2, {}
+
+    stat = stat_json.get("data")
+    if not isinstance(stat, dict):
+        logging.warning(f"获取 av{video_aid} 失败: data 为空或格式错误, {status = }")
+        return -2, {}
 
     stating = stat["stat"]  # 由于获取的 get_info，stat 需要单独挤进去
     stat.update(stating)
@@ -651,6 +672,7 @@ def apply_bilibili_api(
             ConnectTimeout,
             RemoteProtocolError,
             ReadTimeout,
+            asyncio.TimeoutError,
         ):
             try_times += 1
             if try_times == max_try_times:  # 网络错误
@@ -690,9 +712,9 @@ def apply_bilibili_api(
             exit()
         except Exception as e:
             logging.error(f"Unhandled Exception: {type(e)} {e}")
-            from bilibili_api import settings
+            from bilibili_api import request_settings
 
-            if len(settings.proxy) > 0:
+            if request_settings.get_proxy():
                 switch_proxy()
             else:
                 return -2, []
@@ -745,14 +767,14 @@ def apply_response_getter(
 
 def switch_proxy():
     logging.info("切换代理")
-    from bilibili_api import settings
+    from bilibili_api import request_settings
 
     try:
         data = requests.get(url=os.getenv("PROXY_LIST_URL", "")).json()
         proxy_url = "http://" + data["obj"][0]["ip"] + ":" + data["obj"][0]["port"]
     except:
         proxy_url = ""
-    settings.proxy = proxy_url
+    request_settings.set_proxy(proxy_url)
 
 def lower_tags(tags: List[str]) -> List[str]:
     return [tag.lower() for tag in tags]

@@ -100,7 +100,7 @@ def mainfunc():
     logging.info("生成 CSV 信息表格")
 
     with open(f"./data/data.csv", "w", encoding="utf-8-sig", newline="") as csvfile:
-        writer = csv.DictWriter(csvfile, co_header)
+        writer = csv.DictWriter(csvfile, co_header, escapechar='\\')
         writer.writeheader()
         vid_list = []
         for video_aid, video_info in all_video_info.items():
