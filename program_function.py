@@ -1,4 +1,5 @@
 import hashlib
+import math
 import shutil
 import requests
 import logging
@@ -6,7 +7,6 @@ import subprocess
 import codecs
 import csv
 import ffmpeg
-import colorsys
 import html
 import pydub
 import os
@@ -16,6 +16,7 @@ from io import BytesIO
 from PIL import Image
 import numpy as np
 from haishoku.haishoku import Haishoku
+from coloraide import Color
 
 from dataclasses import dataclass
 
@@ -218,20 +219,28 @@ def calc_color(file):
         # light_color = adjust_brightness(single_color[1],light_adjust)
         # dark_color = adjust_brightness(single_color[1],dark_adjust)
         outnum += 1
-        hsl = rgb2hsl(single_color[1])
-        if hsl[1] < 0.25:
+        lch = rgb2oklch(single_color[1])
+        # OKLCH 色度 C 低于 0.03 视为偏灰，跳过（近似旧版 HSL 饱和度 < 0.25 的判断）
+        if lch[1] < 0.03:
             if not (outnum >= palette_num):
                 if not color_palette[outnum][0] < 0.15:
                     continue
-        light_color = f"({hsl[0]},{hsl[1]*100}%,75%)"
-        dark_color = f"({hsl[0]},{hsl[1]*100}%,35%)"
+        # 亮色 / 暗色：保留源色的色度 C 与色相 H，仅调整 OKLCH 明度 L
+        light_color = f"({0.62:.2f},{lch[1]:.2f},{round(lch[2])})"
+        dark_color = f"({0.35:.2f},{lch[1]:.2f},{round(lch[2])})"
         return [light_color, dark_color]
 
 
-def rgb2hsl(rgb):
-    hls = colorsys.rgb_to_hls(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255)
-    hsl = (hls[0] * 360, hls[2], hls[1])
-    return hsl
+def rgb2oklch(rgb):
+    """
+    将 RGB（0-255）转为 OKLCH 三元组 (L, C, H)。
+    L 取值 0-1，C 为色度，H 为 0-360 的色相角；灰阶（C=0）时 H 记为 0。
+    """
+    oklch = Color("srgb", [channel / 255 for channel in rgb]).convert("oklch")
+    l, c, h = oklch.coords()
+    if math.isnan(h):
+        h = 0.0
+    return (l, c, h)
 
 
 def adjust_brightness(rgb, scale):
